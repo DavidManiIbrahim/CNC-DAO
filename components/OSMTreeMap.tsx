@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect } from "react"
+import { useQuery } from "convex/react"
+import { api } from "@/convex/_generated/api"
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 
@@ -14,30 +16,6 @@ export type RegisteredTree = {
   status: "verified" | "minted" | "pending"
 }
 
-// Real coordinates for the two trees currently in the registry. Swap this
-// for a real fetch (DB or on-chain program accounts) once that exists — see
-// README.md "Where backend/contract work plugs in".
-export const registeredTrees: RegisteredTree[] = [
-  {
-    id: "neem-001",
-    name: "Neem tree #001",
-    species: "Neem",
-    location: "Lagos, Nigeria",
-    lat: 6.5244,
-    lng: 3.3792,
-    status: "minted",
-  },
-  {
-    id: "mango-001",
-    name: "Mango tree #001",
-    species: "Mango",
-    location: "Yola, Nigeria",
-    lat: 9.2035,
-    lng: 12.4954,
-    status: "minted",
-  },
-]
-
 const statusColor: Record<RegisteredTree["status"], string> = {
   verified: "#22c55e",
   minted: "#a78bfa",
@@ -45,12 +23,25 @@ const statusColor: Record<RegisteredTree["status"], string> = {
 }
 
 export default function OSMTreeMap({
-  trees = registeredTrees,
+  trees: propTrees,
   className = "",
 }: {
   trees?: RegisteredTree[]
   className?: string
 }) {
+  const convexTrees = useQuery(api.trees.list)
+  const trees: RegisteredTree[] =
+    propTrees ??
+    (convexTrees ?? []).map((t) => ({
+      id: t._id,
+      name: t.name,
+      species: t.species,
+      location: t.location,
+      lat: t.lat,
+      lng: t.lng,
+      status: t.status,
+    }))
+
   // Leaflet's default marker icons reference image paths that break under
   // Next.js's bundler — using CircleMarker instead avoids that entirely, so
   // no icon-fix workaround is needed here.

@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
@@ -27,6 +29,61 @@ const landOwnership = [
 export default function TreeRegPage() {
   const [submitted, setSubmitted] = useState(false)
   const [step, setStep] = useState(1)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const createTree = useMutation(api.trees.create)
+
+  const [formData, setFormData] = useState({
+    species: "",
+    plantingDate: "",
+    height: "",
+    age: "",
+    notes: "",
+    lat: "",
+    lng: "",
+    city: "",
+    country: "",
+    landOwnership: "",
+    planterName: "",
+    planterEmail: "",
+    planterWallet: "",
+  })
+
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (step < 4) {
+      setStep(step + 1)
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      await createTree({
+        name: `${formData.species} tree`,
+        species: formData.species,
+        location: `${formData.city}, ${formData.country}`,
+        country: formData.country,
+        lat: parseFloat(formData.lat) || 0,
+        lng: parseFloat(formData.lng) || 0,
+        planterName: formData.planterName,
+        planterEmail: formData.planterEmail,
+        planterWallet: formData.planterWallet || undefined,
+        height: formData.height ? parseFloat(formData.height) : undefined,
+        age: formData.age || undefined,
+        notes: formData.notes || undefined,
+        landOwnership: formData.landOwnership,
+      })
+      setSubmitted(true)
+    } catch (error) {
+      console.error("Failed to submit tree:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <main className="bg-[#0b0a12] text-white font-[family-name:var(--font-space-grotesk)]">
@@ -90,28 +147,46 @@ export default function TreeRegPage() {
                 </div>
 
                 <form
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    if (step < 4) {
-                      setStep(step + 1)
-                    } else {
-                      setSubmitted(true)
-                    }
-                  }}
+                  onSubmit={handleSubmit}
                   className="rounded-2xl border border-white/10 bg-[#08080f] p-6 md:p-10"
                 >
                   {step === 1 && (
                     <div className="flex flex-col gap-5">
                       <SectionHeading title="Tree Details" subtitle="What did you plant?" />
-                      <Select label="Species" options={speciesOptions} required />
-                      <Field label="Planting date" type="date" required />
+                      <Select
+                        label="Species"
+                        options={speciesOptions}
+                        value={formData.species}
+                        onChange={(v) => handleChange("species", v)}
+                        required
+                      />
+                      <Field
+                        label="Planting date"
+                        type="date"
+                        value={formData.plantingDate}
+                        onChange={(v) => handleChange("plantingDate", v)}
+                        required
+                      />
                       <div className="grid grid-cols-2 gap-4">
-                        <Field label="Approx. height (m)" type="number" placeholder="1.5" />
-                        <Field label="Approx. age" placeholder="e.g. 6 months" />
+                        <Field
+                          label="Approx. height (m)"
+                          type="number"
+                          placeholder="1.5"
+                          value={formData.height}
+                          onChange={(v) => handleChange("height", v)}
+                        />
+                        <Field
+                          label="Approx. age"
+                          placeholder="e.g. 6 months"
+                          value={formData.age}
+                          onChange={(v) => handleChange("age", v)}
+                        />
                       </div>
                       <TextArea
                         label="Additional notes"
                         placeholder="Anything else Nature Heroes should know — soil type, nearby landmarks, etc."
+                        value={formData.notes}
+                        onChange={(v) => handleChange("notes", v)}
                       />
                     </div>
                   )}
@@ -120,8 +195,20 @@ export default function TreeRegPage() {
                     <div className="flex flex-col gap-5">
                       <SectionHeading title="Location" subtitle="Where is it planted?" />
                       <div className="grid grid-cols-2 gap-4">
-                        <Field label="Latitude" placeholder="6.5244" required />
-                        <Field label="Longitude" placeholder="3.3792" required />
+                        <Field
+                          label="Latitude"
+                          placeholder="6.5244"
+                          value={formData.lat}
+                          onChange={(v) => handleChange("lat", v)}
+                          required
+                        />
+                        <Field
+                          label="Longitude"
+                          placeholder="3.3792"
+                          value={formData.lng}
+                          onChange={(v) => handleChange("lng", v)}
+                          required
+                        />
                       </div>
                       <button
                         type="button"
@@ -130,10 +217,28 @@ export default function TreeRegPage() {
                         <IconGPS className="h-4 w-4" /> Use my current location
                       </button>
                       <div className="grid grid-cols-2 gap-4">
-                        <Field label="City/Town" placeholder="Lagos" required />
-                        <Field label="Country" placeholder="Nigeria" required />
+                        <Field
+                          label="City/Town"
+                          placeholder="Lagos"
+                          value={formData.city}
+                          onChange={(v) => handleChange("city", v)}
+                          required
+                        />
+                        <Field
+                          label="Country"
+                          placeholder="Nigeria"
+                          value={formData.country}
+                          onChange={(v) => handleChange("country", v)}
+                          required
+                        />
                       </div>
-                      <Select label="Land ownership" options={landOwnership} required />
+                      <Select
+                        label="Land ownership"
+                        options={landOwnership}
+                        value={formData.landOwnership}
+                        onChange={(v) => handleChange("landOwnership", v)}
+                        required
+                      />
                     </div>
                   )}
 
@@ -155,16 +260,28 @@ export default function TreeRegPage() {
                         title="Planter Info"
                         subtitle="Who gets credit for this tree?"
                       />
-                      <Field label="Full name" required />
-                      <Field label="Email" type="email" required />
+                      <Field
+                        label="Full name"
+                        value={formData.planterName}
+                        onChange={(v) => handleChange("planterName", v)}
+                        required
+                      />
+                      <Field
+                        label="Email"
+                        type="email"
+                        value={formData.planterEmail}
+                        onChange={(v) => handleChange("planterEmail", v)}
+                        required
+                      />
                       <div>
                         <label className="mb-2 block text-sm text-white/70">
                           Wallet address
                         </label>
                         <input
                           placeholder="Connect your wallet to auto-fill"
-                          disabled
-                          className="w-full rounded-lg border border-white/10 bg-[#050508] px-4 py-3 text-sm text-white/40 outline-none"
+                          value={formData.planterWallet}
+                          onChange={(e) => handleChange("planterWallet", e.target.value)}
+                          className="w-full rounded-lg border border-white/10 bg-[#050508] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#1db954]/60"
                         />
                       </div>
                       <label className="flex items-start gap-3 text-sm text-white/60">
@@ -189,9 +306,10 @@ export default function TreeRegPage() {
                     )}
                     <button
                       type="submit"
-                      className="flex items-center gap-2 rounded-full bg-[#1db954] px-6 py-3 text-sm font-medium transition-transform duration-200 hover:scale-105"
+                      disabled={isSubmitting}
+                      className="flex items-center gap-2 rounded-full bg-[#1db954] px-6 py-3 text-sm font-medium transition-transform duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
                     >
-                      {step < 4 ? "Continue" : "Submit for verification"}
+                      {isSubmitting ? "Submitting..." : step < 4 ? "Continue" : "Submit for verification"}
                       <IconArrow className="h-4 w-4 rotate-45" />
                     </button>
                   </div>
@@ -221,11 +339,15 @@ function Field({
   placeholder,
   type = "text",
   required = false,
+  value,
+  onChange,
 }: {
   label: string
   placeholder?: string
   type?: string
   required?: boolean
+  value?: string
+  onChange?: (value: string) => void
 }) {
   return (
     <div>
@@ -234,19 +356,33 @@ function Field({
         type={type}
         placeholder={placeholder}
         required={required}
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
         className="w-full rounded-lg border border-white/10 bg-[#050508] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#1db954]/60"
       />
     </div>
   )
 }
 
-function TextArea({ label, placeholder }: { label: string; placeholder?: string }) {
+function TextArea({
+  label,
+  placeholder,
+  value,
+  onChange,
+}: {
+  label: string
+  placeholder?: string
+  value?: string
+  onChange?: (value: string) => void
+}) {
   return (
     <div>
       <label className="mb-2 block text-sm text-white/70">{label}</label>
       <textarea
         placeholder={placeholder}
         rows={3}
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
         className="w-full rounded-lg border border-white/10 bg-[#050508] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#1db954]/60"
       />
     </div>
@@ -257,17 +393,22 @@ function Select({
   label,
   options,
   required = false,
+  value,
+  onChange,
 }: {
   label: string
   options: string[]
   required?: boolean
+  value?: string
+  onChange?: (value: string) => void
 }) {
   return (
     <div>
       <label className="mb-2 block text-sm text-white/70">{label}</label>
       <select
         required={required}
-        defaultValue=""
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
         className="w-full rounded-lg border border-white/10 bg-[#050508] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#1db954]/60"
       >
         <option value="" disabled>

@@ -1,5 +1,6 @@
 import { Syne, Space_Grotesk, Space_Mono, DM_Sans } from "next/font/google"
 import "./globals.css"
+import ConvexClientProvider from "@/components/ConvexClientProvider"
 
 // DM Sans is the real primary heading font on the source site (hero H1, all
 // section H2s, feature card titles). Syne is reserved for a handful of large
@@ -21,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body
         className={`${syne.variable} ${dmSans.variable} ${spaceGrotesk.variable} ${spaceMono.variable} antialiased`}
       >
-        {children}
+        <ConvexClientProvider>{children}</ConvexClientProvider>
       </body>
     </html>
   )

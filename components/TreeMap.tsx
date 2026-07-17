@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useRef, useCallback } from "react"
+import { useQuery } from "convex/react"
+import { api } from "@/convex/_generated/api"
 
 /**
  * TreeMap — ported from the custom code component on the live Framer site
@@ -11,10 +13,7 @@ import { useState, useRef, useCallback } from "react"
  * interactivity beyond CSS hover. This version adds actual state: working
  * filters, search, pan (drag), zoom, and a synced sidebar list <-> map.
  *
- * Tree data below is placeholder matching what's currently live (2 trees,
- * both minted, 0 formally "verified" yet). Swap `trees` for a real fetch
- * once you've got an API/DB behind this — the shape is (id, name, species,
- * location, country, status, x%, y%).
+ * Tree data is now fetched from Convex in real-time.
  */
 
 type TreeStatus = "verified" | "minted" | "pending"
@@ -29,10 +28,24 @@ type Tree = {
   y: number // position as % of map height
 }
 
-const trees: Tree[] = [
-  { id: "neem-001", name: "Neem tree #001", location: "Lagos, Nigeria", country: "Nigeria", status: "minted", x: 50, y: 44 },
-  { id: "mango-001", name: "Mango tree #001", location: "Yola, Nigeria", country: "Nigeria", status: "minted", x: 50.6, y: 44.3 },
-]
+function latLngToPercent(lat: number, lng: number): { x: number; y: number } {
+  const x = ((lng + 180) / 360) * 100
+  const y = ((90 - lat) / 180) * 100
+  return { x: Math.max(5, Math.min(95, x)), y: Math.max(5, Math.min(95, y)) }
+}
+
+function mapConvexTree(t: any): Tree {
+  const pos = latLngToPercent(t.lat, t.lng)
+  return {
+    id: t._id,
+    name: t.name,
+    location: t.location,
+    country: t.country,
+    status: t.status,
+    x: pos.x,
+    y: pos.y,
+  }
+}
 
 const statusColor: Record<TreeStatus, string> = {
   verified: "#22c55e",
@@ -57,6 +70,9 @@ export default function TreeMap() {
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [showList, setShowList] = useState(true)
   const dragRef = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null)
+
+  const convexTrees = useQuery(api.trees.list)
+  const trees: Tree[] = (convexTrees ?? []).map(mapConvexTree)
 
   const filteredTrees = trees.filter((t) => {
     if (activeFilter !== "all" && activeFilter !== "nigeria" && t.status !== activeFilter) return false
