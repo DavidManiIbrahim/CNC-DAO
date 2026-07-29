@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { signIn } from "next-auth/react"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
@@ -26,13 +27,12 @@ export default function ConnectWalletPage() {
   const router = useRouter()
 
   function handleConnect() {
-    // Mock connection — no real wallet adapter or Google OAuth wired up yet.
-    // Real Google sign-in needs an actual OAuth flow (e.g. NextAuth.js with
-    // a Google provider), separate from wallet connection, then linking
-    // that identity to a wallet address server-side. See lib/mockAuth.ts
-    // and README.md for what real auth integration needs.
     connectMockWallet()
     router.push("/dashboard")
+  }
+
+  function handleGoogleSignIn() {
+    signIn("google", { callbackUrl: "/dashboard" })
   }
 
   return (
@@ -40,8 +40,8 @@ export default function ConnectWalletPage() {
       <Header />
 
       <section className="flex min-h-[80vh] items-center justify-center px-6 py-16 md:px-16">
-        <Reveal>
-          <div className="mx-auto w-full max-w-md rounded-2xl border border-[#1db954]/20 bg-gradient-to-b from-[#12121c] to-[#08080f] p-8 shadow-[0_0_60px_-15px_rgba(29,185,84,0.25)]">
+        <Reveal className="w-full flex justify-center">
+          <div className="w-full rounded-2xl border border-[#1db954]/20 bg-gradient-to-b from-[#12121c] to-[#08080f] p-8 shadow-[0_0_60px_-15px_rgba(29,185,84,0.25)]">
             <div className="mb-6 flex justify-center">
               <span className="flex items-center gap-1.5 rounded-full border border-[#1db954]/30 bg-[#1db954]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[#1db954]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#1db954]" />
@@ -87,8 +87,16 @@ export default function ConnectWalletPage() {
                 <span className="h-px flex-1 bg-white/10" />
               </div>
 
+              <Link
+                href="/auth"
+                className="flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-left transition-colors hover:border-[#1db954]/40 hover:bg-white/[0.06]"
+              >
+                <span className="text-xl">✉️</span>
+                <span className="text-sm font-medium">Sign in with Email</span>
+              </Link>
+
               <button
-                onClick={handleConnect}
+                onClick={handleGoogleSignIn}
                 className="flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white px-4 py-3.5 text-left transition-colors hover:bg-white/90"
               >
                 <svg viewBox="0 0 24 24" className="h-5 w-5 flex-shrink-0">

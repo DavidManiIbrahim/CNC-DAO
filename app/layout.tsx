@@ -1,5 +1,7 @@
 import { Syne, Space_Grotesk, Space_Mono, DM_Sans } from "next/font/google"
 import "./globals.css"
+import { SessionProvider } from "@/components/SessionProvider"
+import { ConvexClientProvider } from "@/providers/ConvexProvider"
 
 // DM Sans is the real primary heading font on the source site (hero H1, all
 // section H2s, feature card titles). Syne is reserved for a handful of large
@@ -13,6 +15,9 @@ export const metadata = {
   title: "CNC DAO",
   description:
     "CNC DAO connects real environmental action with blockchain proof. Submit a tree, earn verification from Nature Heroes, and mint your stewardship on Solana.",
+  icons: {
+    icon: "/favicon.png",
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -21,7 +26,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body
         className={`${syne.variable} ${dmSans.variable} ${spaceGrotesk.variable} ${spaceMono.variable} antialiased`}
       >
-        {children}
+        <ConvexClientProvider>
+          <SessionProvider>{children}</SessionProvider>
+        </ConvexClientProvider>
       </body>
     </html>
   )
