@@ -80,7 +80,7 @@ export function WalletButton({ className = "" }: { className?: string }) {
           <button
             onClick={() => {
               setOpen(false)
-              router.push("/dashboard")
+              router.push("/dashboard/profile")
             }}
             className="block w-full px-4 py-3 text-left text-sm text-white/80 transition-colors hover:bg-white/5 hover:text-white"
           >
@@ -95,7 +95,7 @@ export function WalletButton({ className = "" }: { className?: string }) {
               }}
               className="block w-full px-4 py-3 text-left text-sm text-red-400/80 transition-colors hover:bg-white/5 hover:text-red-400"
             >
-              Sign out (Google)
+              {user ? "Sign out (Google)" : "Logout"}
             </button>
           )}
           {user && (

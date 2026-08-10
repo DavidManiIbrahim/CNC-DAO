@@ -15,6 +15,13 @@
 
 export type UserRole = "user" | "nature_hero_pending" | "nature_hero" | "admin"
 
+export const roleLabels: Record<UserRole, { label: string; color: string }> = {
+  user: { label: "Registered User", color: "#cccccc" },
+  nature_hero_pending: { label: "Nature Hero — Pending Review", color: "#f0a830" },
+  nature_hero: { label: "Nature Hero", color: "#1db954" },
+  admin: { label: "Admin", color: "#a78bfa" },
+}
+
 export type MockUser = {
   walletAddress: string
   role: UserRole

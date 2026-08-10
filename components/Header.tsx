@@ -1,6 +1,9 @@
+"use client"
+
 import Link from "next/link"
 import { MobileNav } from "@/components/MobileNav"
 import { WalletButton } from "@/components/WalletButton"
+import { useIsAuthenticated } from "@/lib/useAuth"
 
 const links = [
   { href: "/#how-it-works", label: "How It Works" },
@@ -12,6 +15,9 @@ const links = [
 ]
 
 export function Header() {
+  const authenticated = useIsAuthenticated()
+  if (authenticated) return null
+
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#030303]/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-4 md:px-16">

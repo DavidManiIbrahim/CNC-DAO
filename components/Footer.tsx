@@ -1,7 +1,13 @@
+"use client"
+
 import Link from "next/link"
 import { SocialIcon } from "@/components/Icons"
+import { useIsAuthenticated } from "@/lib/useAuth"
 
 export function Footer() {
+  const authenticated = useIsAuthenticated()
+  if (authenticated) return null
+
   return (
     <footer className="border-t border-white/10 px-6 py-16 md:px-16">
       <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-14 md:grid-cols-3">
