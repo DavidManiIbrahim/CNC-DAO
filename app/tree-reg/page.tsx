@@ -2,11 +2,14 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { IconArrow, IconGPS, IconCheck } from "@/components/Icons"
-import { addUserTree } from "@/lib/registeredTrees"
+import { getMockUser } from "@/lib/mockAuth"
 
 const speciesOptions = [
   "Neem",
@@ -27,7 +30,11 @@ const landOwnership = [
 ]
 
 export default function TreeRegPage() {
+  const router = useRouter()
+  const registerTree = useMutation(api.trees.register)
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState("")
   const [step, setStep] = useState(1)
   const [coords, setCoords] = useState<{ lat: string; lng: string }>({ lat: "", lng: "" })
   const [treeName, setTreeName] = useState("")
@@ -127,24 +134,41 @@ export default function TreeRegPage() {
                 </div>
 
                 <form
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault()
                     if (step < 4) {
                       setStep(step + 1)
-                    } else {
+                      return
+                    }
+                    setSubmitError("")
+                    setSubmitting(true)
+                    try {
+                      const user = getMockUser()
+                      if (!user?.walletAddress) {
+                        router.push("/connect-wallet")
+                        return
+                      }
                       const lat = parseFloat(coords.lat)
                       const lng = parseFloat(coords.lng)
-                      if (!isNaN(lat) && !isNaN(lng)) {
-                        addUserTree({
-                          name: treeName || "Unnamed tree",
-                          species: species || "Unspecified",
-                          location: `${city}, ${country}`.replace(/^, |, $/, ""),
-                          lat,
-                          lng,
-                          status: "pending",
-                        })
+                      if (isNaN(lat) || isNaN(lng)) {
+                        setSubmitError("Please provide valid coordinates")
+                        return
                       }
+                      await registerTree({
+                        walletAddress: user.walletAddress,
+                        name: treeName || "Unnamed tree",
+                        species: species || "Unspecified",
+                        location: `${city}, ${country}`.replace(/^, |, $/, ""),
+                        lat,
+                        lng,
+                      })
                       setSubmitted(true)
+                    } catch (err) {
+                      setSubmitError(
+                        err instanceof Error ? err.message : "Something went wrong"
+                      )
+                    } finally {
+                      setSubmitting(false)
                     }
                   }}
                   className="rounded-2xl border border-white/10 bg-[#08080f] p-6 md:p-10"
@@ -264,6 +288,7 @@ export default function TreeRegPage() {
                         <input
                           placeholder="Connect your wallet to auto-fill"
                           disabled
+                          value={getMockUser()?.walletAddress ?? ""}
                           className="w-full rounded-lg border border-white/10 bg-[#050508] px-4 py-3 text-sm text-white/40 outline-none"
                         />
                       </div>
@@ -289,12 +314,16 @@ export default function TreeRegPage() {
                     )}
                     <button
                       type="submit"
-                      className="flex items-center gap-2 rounded-full bg-[#1db954] px-6 py-3 text-sm font-medium transition-transform duration-200 hover:scale-105"
+                      disabled={submitting}
+                      className="flex items-center gap-2 rounded-full bg-[#1db954] px-6 py-3 text-sm font-medium transition-transform duration-200 hover:scale-105 disabled:opacity-50"
                     >
-                      {step < 4 ? "Continue" : "Submit for verification"}
+                      {step < 4 ? "Continue" : submitting ? "Submitting…" : "Submit for verification"}
                       <IconArrow className="h-4 w-4 rotate-45" />
                     </button>
                   </div>
+                  {submitError && (
+                    <p className="mt-3 text-center text-sm text-red-400">{submitError}</p>
+                  )}
                 </form>
               </>
             )}

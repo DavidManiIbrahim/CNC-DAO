@@ -2,15 +2,19 @@
 
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { getMockUser, setAvatar, setDisplayName, setBio, resizeImage, roleLabels, type MockUser } from "@/lib/mockAuth"
+import { useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
+import { getMockUser, setMockUser, resizeImage, roleLabels, type MockUser } from "@/lib/mockAuth"
 
 export default function ProfilePage() {
   const [user, setUser] = useState<MockUser | null | undefined>(() => getMockUser())
   const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(false)
   const [nameDraft, setNameDraft] = useState("")
   const [bioDraft, setBioDraft] = useState("")
   const fileRef = useRef<HTMLInputElement>(null)
+  const updateProfile = useMutation(api.users.updateProfile)
 
   useEffect(() => {
     const u = getMockUser()
@@ -24,24 +28,47 @@ export default function ProfilePage() {
 
   if (user === undefined || user === null) return null
 
+  function applyUser(u: any) {
+    const updated: MockUser = {
+      userId: u._id,
+      walletAddress: u.walletAddress ?? user.walletAddress,
+      role: u.role as MockUser["role"],
+      displayName: u.displayName ?? undefined,
+      bio: u.bio ?? undefined,
+      avatar: u.avatar ?? undefined,
+      joinedAt: u.joinedAt,
+    }
+    setMockUser(updated)
+    setUser(updated)
+  }
+
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file || !user.userId) return
     setUploading(true)
     try {
       const dataUrl = await resizeImage(file)
-      setAvatar(dataUrl)
-      setUser(getMockUser())
+      const updated = await updateProfile({ userId: user.userId as any, avatar: dataUrl })
+      applyUser(updated)
     } finally {
       setUploading(false)
     }
   }
 
-  function saveEdits() {
-    setDisplayName(nameDraft)
-    setBio(bioDraft)
-    setUser(getMockUser())
-    setEditing(false)
+  async function saveEdits() {
+    if (!user.userId) return
+    setSaving(true)
+    try {
+      const updated = await updateProfile({
+        userId: user.userId as any,
+        displayName: nameDraft,
+        bio: bioDraft,
+      })
+      applyUser(updated)
+      setEditing(false)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -105,12 +132,12 @@ export default function ProfilePage() {
 
           <button
             onClick={() => (editing ? saveEdits() : setEditing(true))}
-            className="flex-shrink-0 rounded-full border border-white/15 px-4 py-2 text-xs font-medium text-white/80 transition-colors hover:bg-white/5"
+            disabled={saving}
+            className="flex-shrink-0 rounded-full border border-white/15 px-4 py-2 text-xs font-medium text-white/80 transition-colors hover:bg-white/5 disabled:opacity-50"
           >
-            {editing ? "Save" : "Edit profile"}
+            {editing ? (saving ? "Saving…" : "Save") : "Edit profile"}
           </button>
         </div>
-
         {editing ? (
           <textarea
             value={bioDraft}

@@ -2,35 +2,17 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useQuery } from "convex/react"
+import { api } from "@/convex/_generated/api"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { IconArrow } from "@/components/Icons"
 import { getMockUser } from "@/lib/mockAuth"
 
-// Mock campaign data — swap for a real fetch once there's a backend. See
-// README.md "Where backend/contract work plugs in".
-const campaigns = [
-  {
-    id: "1",
-    name: "Lagos Mangrove Restoration",
-    region: "Lagos, Nigeria",
-    joined: 34,
-    limit: 100,
-    createdBy: "Nature Hero — A. Okafor",
-  },
-  {
-    id: "2",
-    name: "Yola Community Orchard",
-    region: "Yola, Nigeria",
-    joined: 12,
-    limit: 50,
-    createdBy: "Nature Hero — M. Bello",
-  },
-]
-
 export default function CampaignsPage() {
   const [isNatureHero, setIsNatureHero] = useState(false)
+  const campaigns = useQuery(api.campaigns.list) ?? []
 
   useEffect(() => {
     const u = getMockUser()
@@ -75,11 +57,16 @@ export default function CampaignsPage() {
       <section className="px-6 pb-24 md:px-16">
         <Reveal>
           <div className="mx-auto grid max-w-[1000px] grid-cols-1 gap-4 sm:grid-cols-2">
-            {campaigns.map((c) => {
-              const pct = Math.round((c.joined / c.limit) * 100)
+            {campaigns.length === 0 && (
+              <div className="col-span-full rounded-xl border border-white/10 bg-[#08080f] p-10 text-center text-sm text-white/40">
+                No campaigns yet. Be the first to create one.
+              </div>
+            )}
+            {campaigns.map((c: any) => {
+              const pct = Math.round((c.joined / c.participantLimit) * 100)
               return (
                 <div
-                  key={c.id}
+                  key={c._id}
                   className="rounded-xl border border-white/10 bg-[#08080f] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#1db954]/40"
                 >
                   <h3 className="mb-1 font-[family-name:var(--font-syne)] text-lg font-bold">
@@ -94,7 +81,7 @@ export default function CampaignsPage() {
                   </div>
                   <div className="mb-4 flex justify-between text-xs text-white/40">
                     <span>
-                      {c.joined} / {c.limit} joined
+                      {c.joined} / {c.participantLimit} joined
                     </span>
                     <span>{c.createdBy}</span>
                   </div>

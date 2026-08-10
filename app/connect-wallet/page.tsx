@@ -1,13 +1,16 @@
 "use client"
 
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { signIn } from "next-auth/react"
+import { useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { IconCheck, IconArrow } from "@/components/Icons"
-import { connectMockWallet } from "@/lib/mockAuth"
+import { getMockUser, connectMockWallet } from "@/lib/mockAuth"
 
 const wallets = [
   { name: "Phantom", note: "DETECTED", emoji: "👻" },
@@ -25,10 +28,22 @@ const guarantees = [
 
 export default function ConnectWalletPage() {
   const router = useRouter()
+  const [connecting, setConnecting] = useState(false)
+  const connectWallet = useMutation(api.users.connectWallet)
 
-  function handleConnect() {
-    connectMockWallet()
-    router.push("/dashboard")
+  async function handleConnect() {
+    if (connecting) return
+    setConnecting(true)
+    try {
+      const existing = getMockUser()
+      const walletAddress =
+        existing?.walletAddress || "Demo" + Math.floor(Math.random() * 9999)
+      const user = await connectWallet({ walletAddress })
+      connectMockWallet(walletAddress, user._id)
+      router.push("/dashboard")
+    } finally {
+      setConnecting(false)
+    }
   }
 
   function handleGoogleSignIn() {

@@ -1,33 +1,36 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useQuery, useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
 import { getMockUser, type MockUser } from "@/lib/mockAuth"
-import { getUserTrees, updateTreeStatus, type RegisteredTree } from "@/lib/registeredTrees"
-
-// Sample data standing in for what an admin would see across ALL users —
-// this mock system only tracks one wallet per browser (see lib/mockAuth.ts),
-// so cross-user data like this can't be real until there's a backend.
-const sampleApplications = [
-  { id: "app-1", name: "Aisha Bello", region: "Kano, Nigeria", submittedAt: "3 days ago" },
-  { id: "app-2", name: "Chidi Okafor", region: "Enugu, Nigeria", submittedAt: "1 day ago" },
-]
 
 export default function VerificationPage() {
   const [user, setUser] = useState<MockUser | null | undefined>(() => getMockUser())
-  const [pendingTrees, setPendingTrees] = useState<RegisteredTree[]>([])
-  const [applications, setApplications] = useState(sampleApplications)
+  const verifierId = user?.userId
+  const adminId = user?.userId
+
+  const pendingTrees =
+    useQuery(
+      api.trees.listPending,
+      verifierId && (user?.role === "nature_hero" || user?.role === "admin")
+        ? { verifierId: verifierId as any }
+        : "skip",
+    ) ?? []
+
+  const applications =
+    useQuery(
+      api.natureHeroes.listApplications,
+      adminId && user?.role === "admin" ? { adminId: adminId as any } : "skip",
+    ) ?? []
+
+  const updateTreeStatus = useMutation(api.trees.updateStatus)
+  const setApplicationStatus = useMutation(api.natureHeroes.setApplicationStatus)
 
   useEffect(() => {
     const handler = () => setUser(getMockUser())
     window.addEventListener("mockuser:change", handler)
     return () => window.removeEventListener("mockuser:change", handler)
-  }, [])
-
-  useEffect(() => {
-    const refreshQueue = () => setPendingTrees(getUserTrees().filter((t) => t.status === "pending"))
-    refreshQueue()
-    window.addEventListener("trees:change", refreshQueue)
-    return () => window.removeEventListener("trees:change", refreshQueue)
   }, [])
 
   if (user === undefined || user === null) return null
@@ -75,9 +78,9 @@ export default function VerificationPage() {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {pendingTrees.map((t) => (
+              {pendingTrees.map((t: any) => (
                 <div
-                  key={t.id}
+                  key={t._id}
                   className="flex flex-col items-start justify-between gap-3 rounded-xl border border-white/10 bg-[#08080f] p-4 sm:flex-row sm:items-center"
                 >
                   <div>
@@ -88,16 +91,17 @@ export default function VerificationPage() {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => updateTreeStatus(t.id, "verified")}
+                      onClick={() =>
+                        verifierId &&
+                        updateTreeStatus({
+                          verifierId: verifierId as any,
+                          treeId: t._id as any,
+                          status: "verified",
+                        })
+                      }
                       className="rounded-full bg-[#1db954] px-4 py-1.5 text-xs font-medium"
                     >
                       Approve
-                    </button>
-                    <button
-                      onClick={() => updateTreeStatus(t.id, "pending")}
-                      className="rounded-full border border-white/15 px-4 py-1.5 text-xs font-medium text-white/70 hover:bg-white/5"
-                    >
-                      Reject
                     </button>
                   </div>
                 </div>
@@ -106,7 +110,7 @@ export default function VerificationPage() {
           )}
           <p className="mt-3 text-xs text-white/30">
             Real verification requires two independent Nature Heroes to
-            approve — this demo only tracks one action.
+            approve — approval currently records a single action.
           </p>
         </div>
       )}
@@ -117,38 +121,59 @@ export default function VerificationPage() {
             Nature Hero Applications
           </h2>
           <p className="mb-5 text-sm text-white/50">
-            Sample data — real applications need a backend to track other users.
+            Approve or reject applications submitted through the site.
           </p>
           {applications.length === 0 ? (
             <div className="rounded-xl border border-white/10 bg-[#08080f] p-6 text-center text-sm text-white/40">
-              No pending applications.
+              No applications yet.
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {applications.map((a) => (
+              {applications.map((a: any) => (
                 <div
-                  key={a.id}
+                  key={a._id}
                   className="flex flex-col items-start justify-between gap-3 rounded-xl border border-white/10 bg-[#08080f] p-4 sm:flex-row sm:items-center"
                 >
                   <div>
-                    <div className="text-sm font-bold">{a.name}</div>
+                    <div className="text-sm font-bold">{a.fullName}</div>
                     <div className="text-xs text-white/50">
-                      {a.region} — applied {a.submittedAt}
+                      {a.cityRegion}, {a.country} — {a.email}
+                    </div>
+                    <div className="mt-1 text-[10px] uppercase tracking-wide text-white/30">
+                      {a.status}
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => setApplications((prev) => prev.filter((x) => x.id !== a.id))}
-                      className="rounded-full bg-[#1db954] px-4 py-1.5 text-xs font-medium"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => setApplications((prev) => prev.filter((x) => x.id !== a.id))}
-                      className="rounded-full border border-white/15 px-4 py-1.5 text-xs font-medium text-white/70 hover:bg-white/5"
-                    >
-                      Reject
-                    </button>
+                    {a.status === "pending" && (
+                      <>
+                        <button
+                          onClick={() =>
+                            adminId &&
+                            setApplicationStatus({
+                              adminId: adminId as any,
+                              applicationId: a._id as any,
+                              status: "approved",
+                            })
+                          }
+                          className="rounded-full bg-[#1db954] px-4 py-1.5 text-xs font-medium"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() =>
+                            adminId &&
+                            setApplicationStatus({
+                              adminId: adminId as any,
+                              applicationId: a._id as any,
+                              status: "rejected",
+                            })
+                          }
+                          className="rounded-full border border-white/15 px-4 py-1.5 text-xs font-medium text-white/70 hover:bg-white/5"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}

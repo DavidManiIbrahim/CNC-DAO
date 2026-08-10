@@ -8,6 +8,9 @@
  * @module
  */
 
+import type * as campaigns from "../campaigns.js";
+import type * as natureHeroes from "../natureHeroes.js";
+import type * as trees from "../trees.js";
 import type * as users from "../users.js";
 
 import type {
@@ -17,6 +20,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  campaigns: typeof campaigns;
+  natureHeroes: typeof natureHeroes;
+  trees: typeof trees;
   users: typeof users;
 }>;
 

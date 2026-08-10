@@ -41,6 +41,7 @@ export default function AuthPage() {
           : await loginMutation({ email, password })
 
       const user: MockUser = {
+        userId: result._id,
         walletAddress: `email:${result.email}`,
         role: result.role as MockUser["role"],
         displayName: result.name ?? undefined,
