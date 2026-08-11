@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
@@ -11,13 +13,49 @@ import { getMockUser } from "@/lib/mockAuth"
 
 export default function NewCampaignPage() {
   const router = useRouter()
+  const createCampaign = useMutation(api.campaigns.create)
   const [allowed, setAllowed] = useState<boolean | null>(null)
-  const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [form, setForm] = useState({
+    name: "",
+    region: "",
+    participantLimit: "",
+    description: "",
+  })
 
   useEffect(() => {
     const u = getMockUser()
     setAllowed(u?.role === "nature_hero" || u?.role === "admin")
   }, [])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError("")
+    setLoading(true)
+    try {
+      const user = getMockUser()
+      if (!user?.userId) {
+        router.push("/connect-wallet")
+        return
+      }
+      await createCampaign({
+        creatorId: user.userId as any,
+        name: form.name,
+        region: form.region,
+        participantLimit: parseInt(form.participantLimit, 10) || 1,
+        description: form.description,
+      })
+      router.push("/campaigns")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const set = (key: keyof typeof form) => (value: string) =>
+    setForm((f) => ({ ...f, [key]: value }))
 
   return (
     <main className="bg-[#0b0a12] text-white font-[family-name:var(--font-space-grotesk)]">
@@ -42,32 +80,13 @@ export default function NewCampaignPage() {
                   Apply to become a Nature Hero
                 </Link>
               </div>
-            ) : submitted ? (
-              <div className="rounded-2xl border border-white/10 bg-[#08080f] p-10 text-center">
-                <h1 className="mb-2 font-[family-name:var(--font-syne)] text-xl font-bold">
-                  Campaign created
-                </h1>
-                <p className="mb-6 text-sm text-white/60">
-                  This is mock/demo state — persisting campaigns for real needs a
-                  backend data store.
-                </p>
-                <Link
-                  href="/campaigns"
-                  className="inline-block rounded-full bg-[#1db954] px-6 py-3 text-sm font-medium"
-                >
-                  Back to campaigns
-                </Link>
-              </div>
             ) : (
               <>
                 <h1 className="mb-8 font-[family-name:var(--font-dm-sans)] text-[28px] font-medium tracking-[-0.02em]">
                   Create a planting campaign
                 </h1>
                 <form
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    setSubmitted(true)
-                  }}
+                  onSubmit={handleSubmit}
                   className="flex flex-col gap-5 rounded-2xl border border-white/10 bg-[#08080f] p-6 md:p-10"
                 >
                   <div>
@@ -76,6 +95,8 @@ export default function NewCampaignPage() {
                     </label>
                     <input
                       required
+                      value={form.name}
+                      onChange={(e) => set("name")(e.target.value)}
                       placeholder="e.g. Lagos Mangrove Restoration"
                       className="w-full rounded-lg border border-white/10 bg-[#050508] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#1db954]/60"
                     />
@@ -85,6 +106,8 @@ export default function NewCampaignPage() {
                       <label className="mb-2 block text-sm text-white/70">Region</label>
                       <input
                         required
+                        value={form.region}
+                        onChange={(e) => set("region")(e.target.value)}
                         className="w-full rounded-lg border border-white/10 bg-[#050508] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#1db954]/60"
                       />
                     </div>
@@ -96,6 +119,8 @@ export default function NewCampaignPage() {
                         type="number"
                         min={1}
                         required
+                        value={form.participantLimit}
+                        onChange={(e) => set("participantLimit")(e.target.value)}
                         placeholder="100"
                         className="w-full rounded-lg border border-white/10 bg-[#050508] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#1db954]/60"
                       />
@@ -108,15 +133,20 @@ export default function NewCampaignPage() {
                     <textarea
                       required
                       rows={4}
+                      value={form.description}
+                      onChange={(e) => set("description")(e.target.value)}
                       placeholder="What's the goal, and what should participants know before joining?"
                       className="w-full rounded-lg border border-white/10 bg-[#050508] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#1db954]/60"
                     />
                   </div>
+                  {error && <p className="text-sm text-red-400">{error}</p>}
                   <button
                     type="submit"
-                    className="mt-2 flex items-center justify-center gap-2 rounded-full bg-[#1db954] px-6 py-3 text-sm font-medium transition-transform duration-200 hover:scale-105"
+                    disabled={loading}
+                    className="mt-2 flex items-center justify-center gap-2 rounded-full bg-[#1db954] px-6 py-3 text-sm font-medium transition-transform duration-200 hover:scale-105 disabled:opacity-50"
                   >
-                    Create campaign <IconArrow className="h-4 w-4 rotate-45" />
+                    {loading ? "Creating…" : "Create campaign"}{" "}
+                    <IconArrow className="h-4 w-4 rotate-45" />
                   </button>
                 </form>
               </>

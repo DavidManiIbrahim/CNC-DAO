@@ -136,7 +136,9 @@ shows a configuration screen instead of crashing.
 ### 4.3 Server functions
 
 **`convex/users.ts`**
-- `register(email, password, name?)` — PBKDF2-hashed email signup.
+- `register(email, password, name?, role?)` — PBKDF2-hashed email signup. The
+  optional `role` is a demo convenience (the register form lets users pick
+  their starting role); replace with real role assignment in production.
 - `login(email, password)` — password check, returns public user.
 - `get(userId)` — fetch a user.
 - `connectWallet(walletAddress)` — demo get-or-create a Convex user for a
@@ -192,7 +194,11 @@ writes the fresh result back to the cache and dispatches `mockuser:change`.
   get-or-creates the user; the returned `userId` is cached.
 - **Email auth:** `auth/page.tsx` calls `api.users.register`/`login`; the
   returned `_id` is cached with `walletAddress = "email:..."`.
-- **Google:** NextAuth session; the app falls back to the cached mock user.
+- **Google:** NextAuth session. `lib/useAuth.ts` `useSessionUser()` synthesizes
+  a session (wallet address `google:<email>`, role `user`) from the Google
+  profile so role-gated pages don't bounce; `DashboardShell` lazily
+  get-or-creates the Convex user on first dashboard visit so Convex-backed
+  features work for Google sign-ins too.
 
 `lib/useAuth.ts` — `useIsAuthenticated()` returns true when there's a Google
 session OR a cached mock user. Note: this is *not* a security boundary; real
@@ -249,11 +255,14 @@ multi-step form; final submit calls `api.trees.register(...)`, creating a
 |---|---|---|
 | Wallet connect | Demo: generated address → Convex user | `@solana/wallet-adapter-react` + signed-message proof |
 | Session | localStorage cache; UI-readable, not server-verified | Real auth provider (Convex auth or wallet session) |
+| Register roles | Self-selected at signup (demo-only) | Real role assignment (admin-approved applications) |
+| Google sign-in | NextAuth provider (skipped gracefully without creds) | `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` in `.env.local`; session is synthesized into the app session cache |
 | Tree maps/globe (`TreeMap`, `OSMTreeMap`, `DotGlobe`) | Read seed + legacy localStorage trees | Read from `api.trees.listMine` / a public tree query |
 | Badges (`lib/badges.ts`) | Computed from session + local trees | Compute from Convex history |
 | Tree verification | Single approval flips status | Real 2-of-2 independent Nature Hero consensus |
 | Tree photos | Placeholder upload boxes, no capture | File upload (IPFS) + photo URLs in `trees` |
 | Contact form (`/contact`) | Sets local "sent" state only | `contactMessages` table + mutation |
+| Campaigns | `joined` count is static (0); no join flow | `joinCampaign` mutation |
 | NFT minting | Button inert | Mint flow once verification exists |
 | Homepage stats | Hardcoded numbers | Live counts from Convex |
 | `registeredTrees.ts` | Legacy localStorage helpers for maps | Remove once maps read Convex |

@@ -75,6 +75,14 @@ export const register = mutation({
     email: v.string(),
     password: v.string(),
     name: v.optional(v.string()),
+    role: v.optional(
+      v.union(
+        v.literal("user"),
+        v.literal("nature_hero_pending"),
+        v.literal("nature_hero"),
+        v.literal("admin"),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -93,15 +101,20 @@ export const register = mutation({
     const salt = generateSalt()
     const passwordHash = await hashPassword(args.password, salt)
 
+    // NOTE: self-selected roles are demo-only. Replace with real role
+    // assignment (admin-approved Nature Hero applications, etc.) before
+    // this is production.
     const userId = await ctx.db.insert("users", {
       email: args.email,
       passwordHash: `${salt}:${passwordHash}`,
       name: args.name,
-      role: "user",
+      role: args.role ?? "user",
       joinedAt: new Date().toISOString(),
     })
 
-    return toPublicUser(await ctx.db.get(userId))
+    const created = await ctx.db.get(userId)
+    if (!created) throw new Error("Failed to create user")
+    return toPublicUser(created)
   },
 })
 
@@ -164,7 +177,9 @@ export const connectWallet = mutation({
       role: "user",
       joinedAt: new Date().toISOString(),
     })
-    return toPublicUser(await ctx.db.get(userId))
+    const created = await ctx.db.get(userId)
+    if (!created) throw new Error("Failed to create user")
+    return toPublicUser(created)
   },
 })
 
@@ -185,7 +200,9 @@ export const updateProfile = mutation({
     if (args.avatar !== undefined) patch.avatar = args.avatar
 
     await ctx.db.patch(args.userId, patch)
-    return toPublicUser(await ctx.db.get(args.userId))
+    const updated = await ctx.db.get(args.userId)
+    if (!updated) throw new Error("User not found")
+    return toPublicUser(updated)
   },
 })
 
@@ -214,7 +231,9 @@ export const setUserRole = mutation({
     const target = await ctx.db.get(args.userId)
     if (!target) throw new Error("User not found")
     await ctx.db.patch(args.userId, { role: args.role })
-    return toPublicUser(await ctx.db.get(args.userId))
+    const updated = await ctx.db.get(args.userId)
+    if (!updated) throw new Error("User not found")
+    return toPublicUser(updated)
   },
 })
 

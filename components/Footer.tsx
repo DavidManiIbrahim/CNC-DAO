@@ -2,19 +2,15 @@
 
 import Link from "next/link"
 import { SocialIcon } from "@/components/Icons"
-import { useIsAuthenticated } from "@/lib/useAuth"
 
 export function Footer() {
-  const authenticated = useIsAuthenticated()
-  if (authenticated) return null
-
   return (
     <footer className="border-t border-white/10 px-6 py-16 md:px-16">
       <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-14 md:grid-cols-3">
         <div className="max-w-xs">
           <div className="mb-4 flex items-center gap-2">
             <img
-              src="https://framerusercontent.com/images/XkdqyILHzud8shJDghKw5DhZuw.png"
+              src="/favicon.png"
               alt="CNC DAO"
               className="h-5 w-5 object-cover"
             />

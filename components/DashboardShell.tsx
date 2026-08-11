@@ -1,13 +1,17 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { useSession, signOut } from "next-auth/react"
+import { useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
+import { useSessionUser } from "@/lib/useAuth"
 import {
   getMockUser,
+  setMockUser,
   disconnectMockWallet,
   roleLabels,
-  type MockUser,
   type UserRole,
 } from "@/lib/mockAuth"
 
@@ -91,31 +95,54 @@ function initialsOf(name: string) {
 }
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<MockUser | null | undefined>(undefined)
+  const user = useSessionUser()
+  const { data: googleSession } = useSession()
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
+  const connectWallet = useMutation(api.users.connectWallet)
+  const linkingRef = useRef(false)
 
-  useEffect(() => {
-    setUser(getMockUser())
-    const handler = () => setUser(getMockUser())
-    window.addEventListener("mockuser:change", handler)
-    return () => window.removeEventListener("mockuser:change", handler)
-  }, [])
-
-  // Auto-logout: if the user lands on the dashboard without a valid session,
-  // disconnect and redirect home.
+  // Auto-logout: if the user lands on the dashboard without any session
+  // (no mock user AND no Google session), redirect home.
   useEffect(() => {
     if (user === null) {
-      disconnectMockWallet()
       router.replace("/")
     }
   }, [user, router])
 
+  // Google sign-ins: create a Convex user lazily so Convex-backed features
+  // work for them too, then mirror it into the localStorage session cache.
+  useEffect(() => {
+    if (!user || user.userId || !googleSession?.user) return
+    if (linkingRef.current) return
+    linkingRef.current = true
+    const walletAddress = `google:${googleSession.user.email ?? "user"}`
+    connectWallet({ walletAddress })
+      .then((convexUser) => {
+        setMockUser({
+          userId: convexUser._id,
+          walletAddress,
+          role: convexUser.role as UserRole,
+          displayName: convexUser.displayName ?? convexUser.name ?? undefined,
+          bio: convexUser.bio ?? undefined,
+          avatar: convexUser.avatar ?? googleSession.user?.image ?? undefined,
+          joinedAt: convexUser.joinedAt,
+        })
+      })
+      .finally(() => {
+        linkingRef.current = false
+      })
+  }, [user, googleSession, connectWallet])
+
   if (user === undefined || user === null) return null
 
   function handleDisconnect() {
-    disconnectMockWallet()
+    if (getMockUser()) {
+      disconnectMockWallet()
+    } else {
+      signOut({ callbackUrl: "/" })
+    }
     router.replace("/")
   }
 

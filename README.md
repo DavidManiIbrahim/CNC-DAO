@@ -62,24 +62,25 @@ scripts/
                         previously a real performance bug on the live site).
 ```
 
-## Mock state — read this before wiring up real auth/backend
+## Backend state — read this before adding backend work
 
-Several features are built as real, working UI, but backed by
-**localStorage mock state** (`lib/mockAuth.ts`) instead of real
-authentication, since there's no backend yet. Specifically:
+Most form data is now persisted to the **Convex backend** (see
+`convex/schema.ts` and `convex/*.ts`, plus `architecture.md` for the full
+design). What remains mocked:
 
-- **"Connect Wallet"** (`/connect-wallet`) doesn't call any real wallet
-  adapter — clicking any option just generates a fake address and stores it
-  locally.
-- **User roles** (`user`, `nature_hero_pending`, `nature_hero`, `admin`) are
-  stored client-side and can be changed by anyone by editing localStorage.
-  There's no server-side verification of who actually holds which role.
-- **Nature Hero applications** (`/nature-heroes/apply`) "submit" by just
-  flipping the local role to `nature_hero_pending` — nothing is sent
-  anywhere, and there's no admin approval flow (no admin panel exists).
-- **Campaigns** (`/campaigns`, `/campaigns/new`) use a hardcoded array in
-  `app/campaigns/page.tsx`. The "Nature Hero only" gate on campaign creation
-  checks the same local mock role.
+- **Wallet connect** (`/connect-wallet`) doesn't call a real wallet adapter —
+  clicking any option generates a fake address and get-or-creates a Convex
+  `users` doc for it. Replacing it means wiring
+  `@solana/wallet-adapter-react` + a signed message.
+- **Sessions** are a localStorage cache (`lib/mockAuth.ts`) mirroring the
+  Convex user (keyed by `userId`). It's UI state, not a security boundary.
+- **Register role selection** lets users self-select `user` /
+  `nature_hero_pending` / `nature_hero` / `admin`. Demo-only — replace with
+  real role assignment before production.
+- **Google sign-in** (NextAuth) needs `GOOGLE_CLIENT_ID` /
+  `GOOGLE_CLIENT_SECRET` in `.env.local` (currently commented out) and a
+  `NEXTAUTH_SECRET` (generated). Without Google creds the provider is
+  skipped gracefully.
 
 None of this is a security boundary — it's there so the UI has real states
 to react to (pending/approved/role-gated pages) while the frontend and
@@ -100,21 +101,22 @@ mock data. Specifically:
 
 | Area | Current state | Needs |
 |---|---|---|
-| `Header.tsx` / `connect-wallet/page.tsx` — Connect Wallet | Mock only (`lib/mockAuth.ts`), fake address on click | Wallet adapter integration (`@solana/wallet-adapter-react` recommended) |
-| `app/tree-reg/page.tsx` — submission form | Local React state only, no submission | API route or direct program call to submit a tree registration |
-| `components/OSMTreeMap.tsx` / `TreeMap.tsx` — `registeredTrees` | Hardcoded 2 placeholder trees | Fetch from a real data source (DB or on-chain program accounts) |
+| `Header.tsx` / `connect-wallet/page.tsx` — Connect Wallet | Demo address → Convex `users` doc | Wallet adapter integration (`@solana/wallet-adapter-react` recommended) |
+| `app/tree-reg/page.tsx` — submission form | Persisted to Convex `trees` (status `pending`) | Real 2-of-2 Nature Hero verification; photo upload |
+| `components/OSMTreeMap.tsx` / `TreeMap.tsx` — `registeredTrees` | Hardcoded 2 seed trees + legacy localStorage | Fetch real trees from Convex |
 | `app/page.tsx` — `registryStats` | Hardcoded numbers | Live counts from chain/DB |
-| User roles (`lib/mockAuth.ts`) | localStorage, unverified, client-editable | Real backend-enforced roles tied to wallet address |
-| `nature-heroes/apply` — applications | Sets local mock role, nothing persisted | Real submission + storage + notification |
-| Admin approval of Nature Heroes | Doesn't exist | Admin-only panel/endpoint |
-| `campaigns/page.tsx` — campaign list | Hardcoded array | Database-backed CRUD |
-| `campaigns/new/page.tsx` — creation gate | Checks local mock role only | Server-side role check before allowing creation |
+| User roles (`lib/mockAuth.ts` / `convex/users.ts`) | Convex-backed, but register allows self-selected role (demo) | Real backend-enforced roles tied to wallet address |
+| `nature-heroes/apply` — applications | Persisted to Convex `natureHeroApplications` + admin review UI | Notification flow; real review queue polish |
+| Admin approval of Nature Heroes | Convex `setApplicationStatus` (promotes role) | Full admin panel polish |
+| `campaigns/page.tsx` — campaign list | Convex `campaigns` table | Join/enroll flow (currently inert button) |
+| `campaigns/new/page.tsx` — creation gate | Server-side role check in `api.campaigns.create` | Wallet-signature proof of role |
 | NFT minting | Not implemented — "Mint NFT" button is inert | Mint flow once verification logic exists |
-| Nature Hero verification (2-of-2 approval) | Described in copy only | Actual program logic + a Hero-facing review UI (doesn't exist yet) |
+| Nature Hero verification (2-of-2 approval) | Described in copy only; single approval flips status | Actual program logic + Hero review UI |
 
-Suggested approach: add an `app/api/` directory for route handlers, or a
-separate `programs/` directory if using an Anchor workspace in this same
-repo (neither exists yet — this is a pure frontend repo today).
+The backend is Convex (`convex/` directory). Add an `app/api/` directory for
+custom route handlers (e.g. auth/notification webhooks) or a separate
+`programs/` directory if using an Anchor workspace in this same repo
+(neither exists yet).
 
 ## Development
 

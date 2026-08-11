@@ -27,11 +27,12 @@ export default function ProfilePage() {
   }, [])
 
   if (user === undefined || user === null) return null
+  const currentUser = user
 
   function applyUser(u: any) {
     const updated: MockUser = {
       userId: u._id,
-      walletAddress: u.walletAddress ?? user.walletAddress,
+      walletAddress: u.walletAddress ?? currentUser.walletAddress,
       role: u.role as MockUser["role"],
       displayName: u.displayName ?? undefined,
       bio: u.bio ?? undefined,
@@ -44,11 +45,11 @@ export default function ProfilePage() {
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file || !user.userId) return
+    if (!file || !currentUser.userId) return
     setUploading(true)
     try {
       const dataUrl = await resizeImage(file)
-      const updated = await updateProfile({ userId: user.userId as any, avatar: dataUrl })
+      const updated = await updateProfile({ userId: currentUser.userId as any, avatar: dataUrl })
       applyUser(updated)
     } finally {
       setUploading(false)
@@ -56,11 +57,11 @@ export default function ProfilePage() {
   }
 
   async function saveEdits() {
-    if (!user.userId) return
+    if (!currentUser.userId) return
     setSaving(true)
     try {
       const updated = await updateProfile({
-        userId: user.userId as any,
+        userId: currentUser.userId as any,
         displayName: nameDraft,
         bio: bioDraft,
       })
