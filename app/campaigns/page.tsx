@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
@@ -8,16 +7,12 @@ import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { IconArrow } from "@/components/Icons"
-import { getMockUser } from "@/lib/mockAuth"
+import { useSessionUser } from "@/lib/useAuth"
 
 export default function CampaignsPage() {
-  const [isNatureHero, setIsNatureHero] = useState(false)
+  const user = useSessionUser()
   const campaigns = useQuery(api.campaigns.list) ?? []
-
-  useEffect(() => {
-    const u = getMockUser()
-    setIsNatureHero(u?.role === "nature_hero" || u?.role === "admin")
-  }, [])
+  const isNatureHero = user?.role === "nature_hero" || user?.role === "admin"
 
   return (
     <main className="bg-[#0b0a12] text-white font-[family-name:var(--font-space-grotesk)]">

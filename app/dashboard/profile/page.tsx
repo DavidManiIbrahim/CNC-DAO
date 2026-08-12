@@ -1,13 +1,14 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import Link from "next/link"
 import { useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
-import { getMockUser, setMockUser, resizeImage, roleLabels, type MockUser } from "@/lib/mockAuth"
+import { setMockUser, resizeImage, roleLabels, type MockUser } from "@/lib/mockAuth"
+import { useSessionUser } from "@/lib/useAuth"
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<MockUser | null | undefined>(() => getMockUser())
+  const user = useSessionUser()
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -16,17 +17,7 @@ export default function ProfilePage() {
   const fileRef = useRef<HTMLInputElement>(null)
   const updateProfile = useMutation(api.users.updateProfile)
 
-  useEffect(() => {
-    const u = getMockUser()
-    setUser(u)
-    setNameDraft(u?.displayName ?? "")
-    setBioDraft(u?.bio ?? "")
-    const handler = () => setUser(getMockUser())
-    window.addEventListener("mockuser:change", handler)
-    return () => window.removeEventListener("mockuser:change", handler)
-  }, [])
-
-  if (user === undefined || user === null) return null
+  if (!user) return null
   const currentUser = user
 
   function applyUser(u: any) {
@@ -40,7 +31,6 @@ export default function ProfilePage() {
       joinedAt: u.joinedAt,
     }
     setMockUser(updated)
-    setUser(updated)
   }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -132,7 +122,15 @@ export default function ProfilePage() {
           </div>
 
           <button
-            onClick={() => (editing ? saveEdits() : setEditing(true))}
+            onClick={() => {
+              if (editing) {
+                saveEdits()
+              } else {
+                setNameDraft(user.displayName ?? "")
+                setBioDraft(user.bio ?? "")
+                setEditing(true)
+              }
+            }}
             disabled={saving}
             className="flex-shrink-0 rounded-full border border-white/15 px-4 py-2 text-xs font-medium text-white/80 transition-colors hover:bg-white/5 disabled:opacity-50"
           >

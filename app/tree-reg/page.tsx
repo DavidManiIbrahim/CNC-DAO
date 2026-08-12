@@ -10,7 +10,7 @@ import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { IconArrow, IconGPS, IconCheck } from "@/components/Icons"
-import { getMockUser } from "@/lib/mockAuth"
+import { useSessionUser } from "@/lib/useAuth"
 
 const speciesOptions = [
   "Neem",
@@ -34,6 +34,7 @@ export default function TreeRegPage() {
   const router = useRouter()
   const { data: googleSession } = useSession()
   const registerTree = useMutation(api.trees.register)
+  const user = useSessionUser()
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
@@ -145,7 +146,6 @@ export default function TreeRegPage() {
                     setSubmitError("")
                     setSubmitting(true)
                     try {
-                      const user = getMockUser()
                       const walletAddress =
                         user?.walletAddress ??
                         (googleSession?.user?.email
@@ -291,7 +291,7 @@ export default function TreeRegPage() {
                         <input
                           placeholder="Connect your wallet to auto-fill"
                           disabled
-                          value={getMockUser()?.walletAddress ?? ""}
+                          value={user?.walletAddress ?? ""}
                           className="w-full rounded-lg border border-white/10 bg-[#050508] px-4 py-3 text-sm text-white/40 outline-none"
                         />
                       </div>

@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
-import { getMockUser, roleLabels, type MockUser, type UserRole } from "@/lib/mockAuth"
+import { roleLabels, type UserRole } from "@/lib/mockAuth"
+import { useSessionUser } from "@/lib/useAuth"
 
 export default function UserManagementPage() {
-  const [user, setUser] = useState<MockUser | null | undefined>(() => getMockUser())
+  const user = useSessionUser()
   const setRoleMutation = useMutation(api.users.setUserRole)
   const removeMutation = useMutation(api.users.removeUser)
 
@@ -16,13 +16,7 @@ export default function UserManagementPage() {
     useQuery(api.users.listUsers, adminId ? { adminId: adminId as any } : "skip") ?? []
   const isAdmin = user?.role === "admin"
 
-  useEffect(() => {
-    const handler = () => setUser(getMockUser())
-    window.addEventListener("mockuser:change", handler)
-    return () => window.removeEventListener("mockuser:change", handler)
-  }, [])
-
-  if (user === undefined || user === null) return null
+  if (!user) return null
 
   async function setRole(id: string, role: UserRole) {
     if (!adminId) return

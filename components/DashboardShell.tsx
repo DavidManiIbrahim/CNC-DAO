@@ -8,7 +8,6 @@ import { useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { useSessionUser } from "@/lib/useAuth"
 import {
-  getMockUser,
   setMockUser,
   disconnectMockWallet,
   roleLabels,
@@ -137,9 +136,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (user === undefined || user === null) return null
 
-  const mockUser = getMockUser()
   const walletConnected = Boolean(
-    mockUser && !mockUser.walletAddress.startsWith("google:") && !mockUser.walletAddress.startsWith("email:"),
+    user && !user.walletAddress.startsWith("google:") && !user.walletAddress.startsWith("email:"),
   )
 
   function handleLogout() {

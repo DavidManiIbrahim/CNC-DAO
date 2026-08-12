@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMutation } from "convex/react"
@@ -9,12 +9,13 @@ import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { IconArrow } from "@/components/Icons"
-import { getMockUser } from "@/lib/mockAuth"
+import { useSessionUser } from "@/lib/useAuth"
 
 export default function NewCampaignPage() {
   const router = useRouter()
   const createCampaign = useMutation(api.campaigns.create)
-  const [allowed, setAllowed] = useState<boolean | null>(null)
+  const user = useSessionUser()
+  const allowed = user ? (user.role === "nature_hero" || user.role === "admin") : false
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
@@ -24,17 +25,11 @@ export default function NewCampaignPage() {
     description: "",
   })
 
-  useEffect(() => {
-    const u = getMockUser()
-    setAllowed(u?.role === "nature_hero" || u?.role === "admin")
-  }, [])
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
     setLoading(true)
     try {
-      const user = getMockUser()
       if (!user?.userId) {
         router.push("/connect-wallet")
         return
@@ -64,7 +59,7 @@ export default function NewCampaignPage() {
       <section className="px-6 pb-24 pt-20 md:px-16 md:pt-28">
         <Reveal>
           <div className="mx-auto max-w-xl">
-            {allowed === null ? null : !allowed ? (
+            {!allowed ? (
               <div className="rounded-2xl border border-white/10 bg-[#08080f] p-10 text-center">
                 <h1 className="mb-2 font-[family-name:var(--font-syne)] text-xl font-bold">
                   Nature Heroes only

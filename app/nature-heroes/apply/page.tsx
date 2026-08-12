@@ -8,7 +8,8 @@ import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { IconCheck, IconArrow } from "@/components/Icons"
-import { getMockUser, setMockUser } from "@/lib/mockAuth"
+import { setMockUser } from "@/lib/mockAuth"
+import { useSessionUser } from "@/lib/useAuth"
 
 export default function ApplyNatureHeroPage() {
   const router = useRouter()
@@ -25,7 +26,7 @@ export default function ApplyNatureHeroPage() {
     experience: "",
   })
 
-  const user = getMockUser()
+  const user = useSessionUser()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

@@ -1,12 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
-import { getMockUser, type MockUser } from "@/lib/mockAuth"
+import { useSessionUser } from "@/lib/useAuth"
 
 export default function VerificationPage() {
-  const [user, setUser] = useState<MockUser | null | undefined>(() => getMockUser())
+  const user = useSessionUser()
   const verifierId = user?.userId
   const adminId = user?.userId
 
@@ -33,13 +32,7 @@ export default function VerificationPage() {
   const updateTreeStatus = useMutation(api.trees.updateStatus)
   const setApplicationStatus = useMutation(api.natureHeroes.setApplicationStatus)
 
-  useEffect(() => {
-    const handler = () => setUser(getMockUser())
-    window.addEventListener("mockuser:change", handler)
-    return () => window.removeEventListener("mockuser:change", handler)
-  }, [])
-
-  if (user === undefined || user === null) return null
+  if (!user) return null
 
   const isVerifier = user.role === "nature_hero" || user.role === "admin"
   const isAdmin = user.role === "admin"
