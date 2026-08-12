@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Header } from "@/components/Header"
@@ -31,6 +32,7 @@ const landOwnership = [
 
 export default function TreeRegPage() {
   const router = useRouter()
+  const { data: googleSession } = useSession()
   const registerTree = useMutation(api.trees.register)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -144,10 +146,11 @@ export default function TreeRegPage() {
                     setSubmitting(true)
                     try {
                       const user = getMockUser()
-                      if (!user?.walletAddress) {
-                        router.push("/connect-wallet")
-                        return
-                      }
+                      const walletAddress =
+                        user?.walletAddress ??
+                        (googleSession?.user?.email
+                          ? `google:${googleSession.user.email}`
+                          : "no-wallet")
                       const lat = parseFloat(coords.lat)
                       const lng = parseFloat(coords.lng)
                       if (isNaN(lat) || isNaN(lng)) {
@@ -155,7 +158,7 @@ export default function TreeRegPage() {
                         return
                       }
                       await registerTree({
-                        walletAddress: user.walletAddress,
+                        walletAddress,
                         name: treeName || "Unnamed tree",
                         species: species || "Unspecified",
                         location: `${city}, ${country}`.replace(/^, |, $/, ""),
@@ -419,14 +422,26 @@ function Select({
 }
 
 function UploadBox({ label, required = false }: { label: string; required?: boolean }) {
+  const [fileName, setFileName] = useState("")
   return (
     <div>
       <label className="mb-2 block text-sm text-white/70">
         {label} {required && <span className="text-[#f0a830]">*</span>}
       </label>
-      <div className="flex h-28 cursor-pointer items-center justify-center rounded-xl border border-dashed border-white/20 text-sm text-white/40 transition-colors hover:border-[#1db954]/50 hover:text-white/60">
-        Tap to upload
-      </div>
+      <label className="flex h-28 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-white/20 text-sm text-white/40 transition-colors hover:border-[#1db954]/50 hover:text-white/60">
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          required={required}
+          onChange={(e) => setFileName(e.target.files?.[0]?.name ?? "")}
+        />
+        {fileName ? (
+          <span className="max-w-full truncate px-4 text-[#1db954]">{fileName}</span>
+        ) : (
+          "Tap to upload"
+        )}
+      </label>
     </div>
   )
 }

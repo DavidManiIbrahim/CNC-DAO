@@ -41,6 +41,14 @@ const baseTrees: RegisteredTree[] = [
 // Kept for anything importing the old name directly.
 export const registeredTrees = baseTrees
 
+export function getSeedTrees(): RegisteredTree[] {
+  return [...baseTrees]
+}
+
+export function isSeedTree(id: string): boolean {
+  return baseTrees.some((t) => t.id === id)
+}
+
 const USER_TREES_KEY = "cncdao_user_trees"
 
 /**

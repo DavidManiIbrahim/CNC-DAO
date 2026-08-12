@@ -22,6 +22,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async redirect({ url, baseUrl }) {
       // After sign-in, send users to the dashboard
+      if (url.startsWith("/")) return `${baseUrl}${url}`
       if (url.startsWith(baseUrl) && !url.includes("/api/auth")) {
         return `${baseUrl}/dashboard`
       }

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import landPointsRaw from "./land-points.json"
-import { getAllTrees } from "@/lib/registeredTrees"
+import { useAllTrees } from "@/lib/useTrees"
 
 type LandPoint = { lng: number; lat: number }
 
@@ -17,19 +17,15 @@ const landPoints: LandPoint[] = (landPointsRaw as [number, number][]).map(([lng,
 
 export default function DotGlobe({ className = "" }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const allTrees = useAllTrees()
   // Yellow highlight dots — driven by the same registered-tree data used on
-  // the OpenStreetMap view (lib/registeredTrees.ts), including anything
-  // submitted through the tree-reg form, so both stay in sync live.
+  // the OpenStreetMap view (Convex `trees` table + seed trees), including
+  // anything submitted through the tree-reg form, so both stay in sync live.
   const highlightsRef = useRef<LandPoint[]>([])
 
   useEffect(() => {
-    const refresh = () => {
-      highlightsRef.current = getAllTrees().map((t) => ({ lng: t.lng, lat: t.lat }))
-    }
-    refresh()
-    window.addEventListener("trees:change", refresh)
-    return () => window.removeEventListener("trees:change", refresh)
-  }, [])
+    highlightsRef.current = allTrees.map((t) => ({ lng: t.lng, lat: t.lat }))
+  }, [allTrees])
 
   useEffect(() => {
     const canvas = canvasRef.current

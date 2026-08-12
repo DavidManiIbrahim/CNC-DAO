@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useRef, useCallback, useEffect } from "react"
-import { getAllTrees, latLngToXY, type RegisteredTree } from "@/lib/registeredTrees"
+import { useState, useRef, useCallback } from "react"
+import { latLngToXY, type RegisteredTree } from "@/lib/registeredTrees"
+import { useAllTrees } from "@/lib/useTrees"
 
 /**
  * TreeMap — ported from the custom code component on the live Framer site
@@ -53,22 +54,12 @@ export default function TreeMap() {
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [showList, setShowList] = useState(true)
   const dragRef = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null)
-  const [trees, setTrees] = useState<Tree[]>([])
-
-  useEffect(() => {
-    const refresh = () => {
-      setTrees(
-        getAllTrees().map((t: RegisteredTree) => {
-          const { x, y } = latLngToXY(t.lat, t.lng)
-          const country = t.location.split(",").pop()?.trim() ?? t.location
-          return { id: t.id, name: t.name, location: t.location, country, status: t.status, x, y }
-        })
-      )
-    }
-    refresh()
-    window.addEventListener("trees:change", refresh)
-    return () => window.removeEventListener("trees:change", refresh)
-  }, [])
+  const allTrees = useAllTrees()
+  const trees: Tree[] = allTrees.map((t: RegisteredTree) => {
+    const { x, y } = latLngToXY(t.lat, t.lng)
+    const country = t.location.split(",").pop()?.trim() ?? t.location
+    return { id: t.id, name: t.name, location: t.location, country, status: t.status, x, y }
+  })
 
   const filteredTrees = trees.filter((t) => {
     if (activeFilter !== "all" && activeFilter !== "nigeria" && t.status !== activeFilter) return false

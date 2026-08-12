@@ -10,20 +10,12 @@ import { Reveal } from "@/components/Reveal"
 import { setMockUser } from "@/lib/mockAuth"
 import type { MockUser } from "@/lib/mockAuth"
 
-const registerRoles = [
-  { value: "user", label: "Registered User", hint: "Plant trees and join campaigns" },
-  { value: "nature_hero_pending", label: "Nature Hero (apply now)", hint: "Requests review by admins" },
-  { value: "nature_hero", label: "Nature Hero", hint: "Verify trees in your region" },
-  { value: "admin", label: "Admin", hint: "Manage users & applications" },
-]
-
 export default function AuthPage() {
   const router = useRouter()
   const [mode, setMode] = useState<"login" | "register">("login")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
-  const [role, setRole] = useState("user")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [convexReady, setConvexReady] = useState(true)
@@ -49,14 +41,13 @@ export default function AuthPage() {
               email,
               password,
               name: name || undefined,
-              role: role as any,
             })
           : await loginMutation({ email, password })
 
       const user: MockUser = {
         userId: result._id,
         walletAddress: `email:${result.email}`,
-        role: result.role as MockUser["role"],
+        role: "user",
         displayName: result.name ?? undefined,
         joinedAt: result.joinedAt,
       }
@@ -123,31 +114,6 @@ export default function AuthPage() {
                         placeholder="Your name"
                         className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-[#1db954]/40"
                       />
-                    </div>
-                  )}
-
-                  {mode === "register" && (
-                    <div>
-                      <label htmlFor="role" className="mb-1 block text-xs font-medium text-white/60">
-                        Role
-                      </label>
-                      <select
-                        id="role"
-                        value={role}
-                        onChange={(e) => setRole(e.target.value)}
-                        className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#1db954]/40"
-                      >
-                        {registerRoles.map((r) => (
-                          <option key={r.value} value={r.value} className="bg-[#0b0a12]">
-                            {r.label}
-                          </option>
-                        ))}
-                      </select>
-                      <p className="mt-1 text-[11px] text-white/40">
-                        {
-                          registerRoles.find((r) => r.value === role)?.hint
-                        }
-                      </p>
                     </div>
                   )}
 

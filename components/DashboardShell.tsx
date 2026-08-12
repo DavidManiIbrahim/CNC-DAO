@@ -137,12 +137,22 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (user === undefined || user === null) return null
 
-  function handleDisconnect() {
-    if (getMockUser()) {
-      disconnectMockWallet()
-    } else {
+  const mockUser = getMockUser()
+  const walletConnected = Boolean(
+    mockUser && !mockUser.walletAddress.startsWith("google:") && !mockUser.walletAddress.startsWith("email:"),
+  )
+
+  function handleLogout() {
+    if (googleSession) {
       signOut({ callbackUrl: "/" })
+      return
     }
+    disconnectMockWallet()
+    router.replace("/")
+  }
+
+  function handleDisconnectWallet() {
+    disconnectMockWallet()
     router.replace("/")
   }
 
@@ -153,7 +163,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     }))
     .filter((g) => g.items.length > 0)
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
+  const isActive = (href: string) =>
+    pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`))
 
   const sidebar = (
     <nav className="flex flex-col gap-6 overflow-y-auto">
@@ -241,11 +252,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 </span>
               </span>
             </Link>
+            {walletConnected && (
+              <button
+                onClick={handleDisconnectWallet}
+                className="hidden rounded-full border border-white/15 px-4 py-2 text-xs font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white md:block"
+              >
+                Disconnect Wallet
+              </button>
+            )}
             <button
-              onClick={handleDisconnect}
-              className="hidden rounded-full border border-white/15 px-4 py-2 text-xs font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white md:block"
+              onClick={handleLogout}
+              className="hidden rounded-full border border-red-500/30 px-4 py-2 text-xs font-medium text-red-300/80 transition-colors hover:bg-red-500/10 hover:text-red-200 md:block"
             >
-              Disconnect
+              Logout
             </button>
           </div>
         </div>

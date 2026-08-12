@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
-import { getAllTrees, type RegisteredTree } from "@/lib/registeredTrees"
+import { type RegisteredTree } from "@/lib/registeredTrees"
+import { useAllTrees } from "@/lib/useTrees"
 
 export type { RegisteredTree }
 
@@ -21,15 +22,8 @@ export default function OSMTreeMap({
   className?: string
 }) {
   const [satelliteView, setSatelliteView] = useState<RegisteredTree | null>(null)
-  const [liveTrees, setLiveTrees] = useState<RegisteredTree[]>(trees ?? [])
-
-  useEffect(() => {
-    if (trees) return // explicit prop overrides live data
-    const refresh = () => setLiveTrees(getAllTrees())
-    refresh()
-    window.addEventListener("trees:change", refresh)
-    return () => window.removeEventListener("trees:change", refresh)
-  }, [trees])
+  const dbLiveTrees = useAllTrees()
+  const liveTrees = trees ?? dbLiveTrees
 
   const center: [number, number] =
     liveTrees.length > 0 ? [liveTrees[0].lat, liveTrees[0].lng] : [9.082, 8.6753]

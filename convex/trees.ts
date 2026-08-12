@@ -44,6 +44,12 @@ export const listMine = query({
   },
 })
 
+export const listAll = query({
+  handler: async (ctx) => {
+    return ctx.db.query("trees").order("desc").collect()
+  },
+})
+
 export const listPending = query({
   args: { verifierId: v.id("users") },
   handler: async (ctx, args) => {

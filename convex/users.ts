@@ -75,14 +75,6 @@ export const register = mutation({
     email: v.string(),
     password: v.string(),
     name: v.optional(v.string()),
-    role: v.optional(
-      v.union(
-        v.literal("user"),
-        v.literal("nature_hero_pending"),
-        v.literal("nature_hero"),
-        v.literal("admin"),
-      ),
-    ),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -101,14 +93,11 @@ export const register = mutation({
     const salt = generateSalt()
     const passwordHash = await hashPassword(args.password, salt)
 
-    // NOTE: self-selected roles are demo-only. Replace with real role
-    // assignment (admin-approved Nature Hero applications, etc.) before
-    // this is production.
     const userId = await ctx.db.insert("users", {
       email: args.email,
       passwordHash: `${salt}:${passwordHash}`,
       name: args.name,
-      role: args.role ?? "user",
+      role: "user",
       joinedAt: new Date().toISOString(),
     })
 

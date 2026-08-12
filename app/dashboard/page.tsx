@@ -1,25 +1,18 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
 import { BadgeIcon } from "@/components/Icons"
-import { getMockUser, type MockUser } from "@/lib/mockAuth"
-import { getUserTrees } from "@/lib/registeredTrees"
 import { getBadges } from "@/lib/badges"
+import { useSessionUser } from "@/lib/useAuth"
+import { useMyTrees } from "@/lib/useTrees"
 
 export default function DashboardOverviewPage() {
-  const [user, setUser] = useState<MockUser | null | undefined>(() => getMockUser())
+  const user = useSessionUser()
+  const trees = useMyTrees(user?.walletAddress)
 
-  useEffect(() => {
-    const handler = () => setUser(getMockUser())
-    window.addEventListener("mockuser:change", handler)
-    return () => window.removeEventListener("mockuser:change", handler)
-  }, [])
+  if (!user) return null
 
-  if (user === undefined || user === null) return null
-
-  const trees = getUserTrees()
-  const badges = getBadges(user)
+  const badges = getBadges(user, trees)
   const earnedCount = badges.filter((b) => b.earned).length
 
   const stats = [

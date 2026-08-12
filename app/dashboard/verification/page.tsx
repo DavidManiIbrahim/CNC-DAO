@@ -18,6 +18,12 @@ export default function VerificationPage() {
         : "skip",
     ) ?? []
 
+  const myTrees =
+    useQuery(
+      api.trees.listMine,
+      user?.walletAddress ? { walletAddress: user.walletAddress } : "skip",
+    ) ?? []
+
   const applications =
     useQuery(
       api.natureHeroes.listApplications,
@@ -63,6 +69,47 @@ export default function VerificationPage() {
           </p>
         </div>
       )}
+
+      <div className="mb-8">
+        <h2 className="mb-1 font-[family-name:var(--font-syne)] text-lg font-bold">
+          My submissions
+        </h2>
+        <p className="mb-5 text-sm text-white/50">
+          Trees you've registered and their current status.
+        </p>
+        {myTrees.length === 0 ? (
+          <div className="rounded-xl border border-white/10 bg-[#08080f] p-6 text-center text-sm text-white/40">
+            You haven't registered any trees yet.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {myTrees.map((t: any) => (
+              <div
+                key={t._id}
+                className="flex flex-col items-start justify-between gap-3 rounded-xl border border-white/10 bg-[#08080f] p-4 sm:flex-row sm:items-center"
+              >
+                <div>
+                  <div className="text-sm font-bold">{t.name}</div>
+                  <div className="text-xs text-white/50">
+                    {t.species} — {t.location}
+                  </div>
+                </div>
+                <span
+                  className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                    t.status === "verified"
+                      ? "bg-[#1db954]/15 text-[#1db954]"
+                      : t.status === "minted"
+                        ? "bg-[#f0a830]/15 text-[#f0a830]"
+                        : "bg-white/5 text-white/40"
+                  }`}
+                >
+                  {t.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {isVerifier && (
         <div className="mb-8">
