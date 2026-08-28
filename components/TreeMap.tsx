@@ -51,6 +51,9 @@ export default function TreeMap() {
     return { id: t.id, name: t.name, location: t.location, country, status: t.status, x, y }
   })
 
+  const convexTrees = useQuery(api.trees.list)
+  const trees: Tree[] = (convexTrees ?? []).map(mapConvexTree)
+
   const filteredTrees = trees.filter((t) => {
     if (activeFilter === "pending" && t.status !== "pending") return false
     if (activeFilter === "verified" && t.status !== "verified" && t.status !== "minted") return false
