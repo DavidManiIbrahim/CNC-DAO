@@ -3,6 +3,7 @@
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { useSessionUser } from "@/lib/useAuth"
+import { Shield, ShieldAlert, CheckCircle, XCircle } from "lucide-react"
 
 export default function HeroVerificationPage() {
   const user = useSessionUser()
@@ -21,12 +22,16 @@ export default function HeroVerificationPage() {
   const isAdmin = user.role === "admin"
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-4xl">
       <div className="mb-8">
-        <h1 className="font-[family-name:var(--font-syne)] text-2xl font-bold">
+        <div className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-red-400">
+          <Shield className="h-3.5 w-3.5" />
+          <span>Admin Review</span>
+        </div>
+        <h1 className="mt-2 font-[family-name:var(--font-syne)] text-2xl font-bold text-foreground">
           Nature Hero Verification
         </h1>
-        <p className="mt-1 text-sm text-white/50">
+        <p className="mt-1 text-sm text-muted-foreground">
           {isAdmin
             ? "Review and approve applications from community members applying to become certified Nature Heroes."
             : "This administrative area is restricted to system administrators."}
@@ -34,25 +39,10 @@ export default function HeroVerificationPage() {
       </div>
 
       {!isAdmin ? (
-        <div className="rounded-xl border border-white/10 bg-[#08080f] p-8 text-center">
-          <div className="mb-3 flex justify-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-400">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-6 w-6"
-              >
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-            </span>
-          </div>
-          <p className="text-sm font-medium text-white/80">Admin Access Required</p>
-          <p className="mt-1 text-xs text-white/40">
+        <div className="rounded-2xl border border-border bg-card p-10 text-center">
+          <ShieldAlert className="mx-auto mb-3 h-10 w-10 text-red-400" />
+          <h2 className="text-lg font-bold text-foreground">Admin Access Required</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             Only system administrators can review and approve Nature Hero applications.
           </p>
         </div>
@@ -60,17 +50,17 @@ export default function HeroVerificationPage() {
         <div>
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="font-[family-name:var(--font-syne)] text-lg font-bold">
+              <h2 className="font-[family-name:var(--font-syne)] text-lg font-bold text-foreground">
                 Applications List
               </h2>
-              <p className="text-xs text-white/50">
-                Total received: {applications.length}
+              <p className="text-xs text-muted-foreground">
+                Total received: <span className="font-semibold text-foreground">{applications.length}</span>
               </p>
             </div>
           </div>
 
           {applications.length === 0 ? (
-            <div className="rounded-xl border border-white/10 bg-[#08080f] p-8 text-center text-sm text-white/40">
+            <div className="rounded-2xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
               No Nature Hero applications submitted yet.
             </div>
           ) : (
@@ -78,12 +68,12 @@ export default function HeroVerificationPage() {
               {applications.map((a: any) => (
                 <div
                   key={a._id}
-                  className="rounded-xl border border-white/10 bg-[#08080f] p-5 transition-colors hover:border-white/20"
+                  className="rounded-2xl border border-border bg-card p-6 transition-all hover:border-[#1db954]/30"
                 >
                   <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-base font-bold text-white">{a.fullName}</h3>
+                        <h3 className="text-base font-bold text-foreground">{a.fullName}</h3>
                         <span
                           className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                             a.status === "approved"
@@ -96,9 +86,9 @@ export default function HeroVerificationPage() {
                           {a.status}
                         </span>
                       </div>
-                      <div className="mt-1 text-xs text-white/50">
+                      <div className="mt-1 text-xs text-muted-foreground">
                         {a.cityRegion}, {a.country} &bull;{" "}
-                        <span className="text-white/70">{a.email}</span>
+                        <span className="text-foreground font-medium">{a.email}</span>
                       </div>
                     </div>
 
@@ -113,9 +103,10 @@ export default function HeroVerificationPage() {
                               status: "approved",
                             })
                           }
-                          className="rounded-full bg-[#1db954] px-4 py-1.5 text-xs font-semibold text-black transition-transform hover:scale-105"
+                          className="flex items-center gap-1.5 rounded-xl bg-[#1db954] px-4 py-2 text-xs font-bold text-black transition-transform hover:scale-105"
                         >
-                          Approve
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          <span>Approve</span>
                         </button>
                         <button
                           onClick={() =>
@@ -126,33 +117,34 @@ export default function HeroVerificationPage() {
                               status: "rejected",
                             })
                           }
-                          className="rounded-full border border-white/15 px-4 py-1.5 text-xs font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white"
+                          className="flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
-                          Reject
+                          <XCircle className="h-3.5 w-3.5" />
+                          <span>Reject</span>
                         </button>
                       </div>
                     )}
                   </div>
 
-                  <div className="mt-4 border-t border-white/5 pt-3">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-white/40 mb-1">
+                  <div className="mt-4 border-t border-border pt-3">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                       Motivation
                     </p>
-                    <p className="text-xs leading-relaxed text-white/80">{a.motivation}</p>
+                    <p className="text-xs leading-relaxed text-foreground">{a.motivation}</p>
                   </div>
 
                   {a.experience && (
-                    <div className="mt-3 border-t border-white/5 pt-3">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-white/40 mb-1">
+                    <div className="mt-3 border-t border-border pt-3">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                         Relevant Experience
                       </p>
-                      <p className="text-xs leading-relaxed text-white/80">{a.experience}</p>
+                      <p className="text-xs leading-relaxed text-foreground">{a.experience}</p>
                     </div>
                   )}
 
-                  <div className="mt-3 text-[10px] text-white/30">
+                  <div className="mt-4 border-t border-border/50 pt-3 text-[11px] text-muted-foreground">
                     Submitted on: {new Date(a.submittedAt).toLocaleDateString()} &bull; Wallet:{" "}
-                    <span className="font-mono">{a.walletAddress}</span>
+                    <span className="font-mono text-foreground">{a.walletAddress}</span>
                   </div>
                 </div>
               ))}

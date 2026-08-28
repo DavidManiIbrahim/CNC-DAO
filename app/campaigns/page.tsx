@@ -9,7 +9,7 @@ import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { IconArrow } from "@/components/Icons"
 import { useSessionUser } from "@/lib/useAuth"
-import { Trash2, Users, Check, Sparkles } from "lucide-react"
+import { Trash2, Users, Check, Sparkles, MapPin } from "lucide-react"
 
 export default function CampaignsPage() {
   const user = useSessionUser()
@@ -49,7 +49,7 @@ export default function CampaignsPage() {
   }
 
   return (
-    <main className="bg-[#0b0a12] text-white font-[family-name:var(--font-space-grotesk)]">
+    <main className="bg-background text-foreground font-[family-name:var(--font-space-grotesk)]">
       <Header />
 
       <section className="px-6 pb-10 pt-20 md:px-16 md:pt-28">
@@ -59,7 +59,7 @@ export default function CampaignsPage() {
               <p className="mb-3 font-[family-name:var(--font-space-mono)] text-xs font-bold uppercase tracking-[0.15em] text-[#f0a830]">
                 Campaigns
               </p>
-              <h1 className="font-[family-name:var(--font-dm-sans)] text-[32px] font-medium tracking-[-0.02em] md:text-[44px]">
+              <h1 className="font-[family-name:var(--font-dm-sans)] text-[32px] font-medium tracking-[-0.02em] md:text-[44px] text-foreground">
                 Join a planting campaign
               </h1>
             </div>
@@ -71,9 +71,9 @@ export default function CampaignsPage() {
                 Create campaign <IconArrow className="h-4 w-4 rotate-45" />
               </Link>
             ) : (
-              <p className="max-w-xs text-xs text-white/40">
+              <p className="max-w-xs text-xs text-muted-foreground">
                 Approved Nature Heroes & Admins can create campaigns.{" "}
-                <Link href="/nature-heroes/apply" className="text-[#1db954] underline">
+                <Link href="/nature-heroes/apply" className="text-[#1db954] underline hover:text-[#1db954]/80">
                   Apply here
                 </Link>
                 .
@@ -87,10 +87,10 @@ export default function CampaignsPage() {
         <Reveal>
           <div className="mx-auto grid max-w-[1000px] grid-cols-1 gap-4 sm:grid-cols-2">
             {campaigns.length === 0 && (
-              <div className="col-span-full rounded-xl border border-white/10 bg-[#08080f] p-10 text-center text-sm text-white/40">
+              <div className="col-span-full rounded-3xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
                 No campaigns yet.{" "}
                 {isNatureHero && (
-                  <Link href="/campaigns/new" className="text-[#1db954] underline">
+                  <Link href="/campaigns/new" className="text-[#1db954] underline font-semibold ml-1">
                     Be the first to create one.
                   </Link>
                 )}
@@ -104,73 +104,82 @@ export default function CampaignsPage() {
               return (
                 <div
                   key={c._id}
-                  className="relative rounded-xl border border-white/10 bg-[#08080f] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#1db954]/40"
+                  className="relative flex flex-col justify-between rounded-3xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#1db954]/40 hover:shadow-md"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="mb-1 font-[family-name:var(--font-syne)] text-lg font-bold text-white">
-                        {c.name}
-                      </h3>
-                      <p className="text-sm text-white/50">{c.region}</p>
+                  <div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="mb-1 font-[family-name:var(--font-syne)] text-lg font-bold text-foreground">
+                          {c.name}
+                        </h3>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3 text-[#1db954]" />
+                          <span>{c.region}</span>
+                        </div>
+                      </div>
+
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleRemove(c._id)}
+                          className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
+                          title="Delete campaign (Admin)"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
 
-                    {isAdmin && (
-                      <button
-                        onClick={() => handleRemove(c._id)}
-                        className="rounded-lg p-1.5 text-white/30 transition-colors hover:bg-red-500/10 hover:text-red-400"
-                        title="Delete campaign (Admin)"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
+                    <p className="my-3 text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                      {c.description}
+                    </p>
                   </div>
 
-                  <p className="my-3 text-xs leading-relaxed text-white/70 line-clamp-2">
-                    {c.description}
-                  </p>
+                  <div>
+                    <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-[#1db954] transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
 
-                  <div className="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-[#1db954]"
-                      style={{ width: `${pct}%` }}
-                    />
+                    <div className="mb-4 flex justify-between text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3.5 w-3.5" />
+                        <span>
+                          {c.joined} / {c.participantLimit} joined
+                        </span>
+                      </span>
+                      <span>By {c.createdBy}</span>
+                    </div>
+
+                    <button
+                      disabled={isFull || isJoined || joiningId === c._id}
+                      onClick={() => handleJoin(c._id)}
+                      className={`flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-bold transition-all duration-200 ${
+                        isJoined
+                          ? "bg-[#1db954]/20 text-[#1db954]"
+                          : isFull
+                            ? "cursor-not-allowed bg-muted text-muted-foreground"
+                            : "bg-[#1db954] text-black hover:bg-[#1db954]/90 hover:scale-105"
+                      }`}
+                    >
+                      {isJoined ? (
+                        <>
+                          <Check className="h-4 w-4" />
+                          <span>Joined!</span>
+                        </>
+                      ) : isFull ? (
+                        "Campaign Full"
+                      ) : joiningId === c._id ? (
+                        "Joining..."
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4" />
+                          <span>Join campaign</span>
+                        </>
+                      )}
+                    </button>
                   </div>
-
-                  <div className="mb-4 flex justify-between text-xs text-white/40">
-                    <span className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      {c.joined} / {c.participantLimit} joined
-                    </span>
-                    <span>By {c.createdBy}</span>
-                  </div>
-
-                  <button
-                    disabled={isFull || isJoined || joiningId === c._id}
-                    onClick={() => handleJoin(c._id)}
-                    className={`flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold transition-all duration-200 ${
-                      isJoined
-                        ? "bg-[#1db954]/20 text-[#1db954]"
-                        : isFull
-                          ? "cursor-not-allowed bg-white/10 text-white/30"
-                          : "bg-white/95 text-[#0b0a12] hover:bg-white hover:scale-105"
-                    }`}
-                  >
-                    {isJoined ? (
-                      <>
-                        <Check className="h-4 w-4" />
-                        Joined!
-                      </>
-                    ) : isFull ? (
-                      "Campaign Full"
-                    ) : joiningId === c._id ? (
-                      "Joining..."
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4" />
-                        Join campaign
-                      </>
-                    )}
-                  </button>
                 </div>
               )
             })}

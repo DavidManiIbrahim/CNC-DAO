@@ -69,7 +69,7 @@ export default function ApplyNatureHeroPage() {
     setForm((f) => ({ ...f, [key]: value }))
 
   return (
-    <main className="bg-[#0b0a12] text-white font-[family-name:var(--font-space-grotesk)]">
+    <main className="bg-background text-foreground font-[family-name:var(--font-space-grotesk)]">
       <Header />
 
       <section className="px-6 pb-16 pt-20 text-center md:px-16 md:pt-28">
@@ -80,7 +80,7 @@ export default function ApplyNatureHeroPage() {
           <h1 className="mx-auto mb-6 max-w-2xl font-[family-name:var(--font-dm-sans)] text-[36px] font-medium leading-tight tracking-[-0.02em] md:text-[52px]">
             Help verify the network
           </h1>
-          <p className="mx-auto max-w-xl leading-[1.6] text-[#cccccc]">
+          <p className="mx-auto max-w-xl leading-[1.6] text-muted-foreground">
             Nature Heroes review tree submissions and validate campaigns in their
             region. Applications are reviewed by CNC DAO admins.
           </p>
@@ -89,16 +89,16 @@ export default function ApplyNatureHeroPage() {
 
       <section className="px-6 pb-24 md:px-16">
         <Reveal>
-          <div className="mx-auto max-w-xl rounded-2xl border border-white/10 bg-[#08080f] p-6 md:p-10">
+          <div className="mx-auto max-w-xl rounded-3xl border border-border bg-card p-6 shadow-xl md:p-10">
             {submitted ? (
               <div className="py-12 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#f0a830]/15">
                   <IconCheck className="h-7 w-7 text-[#f0a830]" />
                 </div>
-                <h2 className="mb-2 font-[family-name:var(--font-syne)] text-xl font-bold">
+                <h2 className="mb-2 font-[family-name:var(--font-syne)] text-xl font-bold text-foreground">
                   Application submitted
                 </h2>
-                <p className="mx-auto max-w-sm text-sm text-white/60">
+                <p className="mx-auto max-w-sm text-sm text-muted-foreground">
                   CNC DAO admins will review your application. Your status will
                   update once it&apos;s approved.
                 </p>
@@ -128,26 +128,28 @@ export default function ApplyNatureHeroPage() {
                   onChange={set("experience")}
                 />
                 <div>
-                  <label className="mb-2 block text-sm text-white/70">
+                  <label className="mb-2 block text-sm font-semibold text-foreground">
                     Wallet address
                   </label>
                   <input
                     placeholder="Connect your wallet to auto-fill"
                     disabled
                     value={user?.walletAddress ?? ""}
-                    className="w-full rounded-lg border border-white/10 bg-[#050508] px-4 py-3 text-sm text-white/40 outline-none"
+                    className="w-full rounded-xl border border-border bg-muted px-4 py-3 text-sm font-mono text-muted-foreground outline-none"
                   />
                 </div>
                 {error && <p className="text-sm text-red-400">{error}</p>}
-                <label className="flex items-start gap-3 text-sm text-white/60">
+                <label className="flex items-start gap-3 text-sm text-muted-foreground">
                   <input type="checkbox" required className="mt-1" />
-                  I understand Nature Heroes are responsible for verifying real
-                  submissions and will act in good faith.
+                  <span>
+                    I understand Nature Heroes are responsible for verifying real
+                    submissions and will act in good faith.
+                  </span>
                 </label>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-2 flex items-center justify-center gap-2 rounded-full bg-[#1db954] px-6 py-3 text-sm font-medium transition-transform duration-200 hover:scale-105 disabled:opacity-50"
+                  className="mt-2 flex items-center justify-center gap-2 rounded-full bg-[#1db954] px-6 py-3 text-sm font-bold text-black transition-transform duration-200 hover:scale-105 disabled:opacity-50"
                 >
                   {loading ? "Submitting…" : "Submit application"}{" "}
                   <IconArrow className="h-4 w-4 rotate-45" />
@@ -178,13 +180,13 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm text-white/70">{label}</label>
+      <label className="mb-2 block text-sm font-semibold text-foreground">{label}</label>
       <input
         type={type}
         required={required}
         value={value}
         onChange={onChange ? (e) => onChange(e.target.value) : undefined}
-        className="w-full rounded-lg border border-white/10 bg-[#050508] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#1db954]/60"
+        className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-[#1db954]/60"
       />
     </div>
   )
@@ -205,14 +207,14 @@ function TextArea({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm text-white/70">{label}</label>
+      <label className="mb-2 block text-sm font-semibold text-foreground">{label}</label>
       <textarea
         placeholder={placeholder}
         required={required}
         rows={3}
         value={value}
         onChange={onChange ? (e) => onChange(e.target.value) : undefined}
-        className="w-full rounded-lg border border-white/10 bg-[#050508] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#1db954]/60"
+        className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-[#1db954]/60"
       />
     </div>
   )

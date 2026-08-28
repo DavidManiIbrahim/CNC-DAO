@@ -21,7 +21,7 @@ const responsibilities = [
 
 export default function NatureHeroesPage() {
   return (
-    <main className="bg-[#0b0a12] text-white font-[family-name:var(--font-space-grotesk)]">
+    <main className="bg-background text-foreground font-[family-name:var(--font-space-grotesk)]">
       <Header />
 
       <section className="px-6 pb-16 pt-20 text-center md:px-16 md:pt-28">
@@ -32,7 +32,7 @@ export default function NatureHeroesPage() {
           <h1 className="mx-auto mb-6 max-w-2xl font-[family-name:var(--font-dm-sans)] text-[36px] font-medium leading-tight tracking-[-0.02em] md:text-[52px]">
             The people who verify every tree
           </h1>
-          <p className="mx-auto max-w-xl leading-[1.6] text-[#cccccc]">
+          <p className="mx-auto max-w-xl leading-[1.6] text-muted-foreground">
             Nature Heroes are independent, regional validators. No submission goes
             on-chain without two of them confirming it in person.
           </p>
@@ -45,13 +45,15 @@ export default function NatureHeroesPage() {
             {responsibilities.map((r) => (
               <div
                 key={r.title}
-                className="rounded-xl border border-white/10 bg-[#08080f] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#1db954]/40"
+                className="rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#1db954]/40"
               >
-                <IconCheck className="mb-4 h-8 w-8" />
-                <h3 className="mb-2 font-[family-name:var(--font-syne)] text-lg font-bold">
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-[#1db954]/10 text-[#1db954]">
+                  <IconCheck className="h-5 w-5" />
+                </div>
+                <h3 className="mb-2 font-[family-name:var(--font-syne)] text-lg font-bold text-foreground">
                   {r.title}
                 </h3>
-                <p className="text-sm text-white/60">{r.body}</p>
+                <p className="text-sm text-muted-foreground">{r.body}</p>
               </div>
             ))}
           </div>
@@ -60,17 +62,17 @@ export default function NatureHeroesPage() {
 
       <section className="px-6 py-24 text-center md:px-16">
         <Reveal>
-          <div className="mx-auto max-w-xl rounded-2xl border border-white/10 bg-gradient-to-br from-[#08080f] to-[#12121c] p-10">
-            <h2 className="mb-3 font-[family-name:var(--font-syne)] text-2xl font-bold">
+          <div className="mx-auto max-w-xl rounded-3xl border border-border bg-card p-10 shadow-lg">
+            <h2 className="mb-3 font-[family-name:var(--font-syne)] text-2xl font-bold text-foreground">
               Become a Nature Hero
             </h2>
-            <p className="mb-8 text-sm text-white/60">
+            <p className="mb-8 text-sm text-muted-foreground">
               Applications open on a regional basis as the network grows. Connect
               your wallet to register interest for your area.
             </p>
             <Link
               href="/nature-heroes/apply"
-              className="inline-block rounded-full bg-[#1db954] px-6 py-3 text-sm font-medium transition-transform duration-200 hover:scale-105"
+              className="inline-block rounded-full bg-[#1db954] px-6 py-3 text-sm font-bold text-black transition-transform duration-200 hover:scale-105"
             >
               Apply to Become a Nature Hero
             </Link>

@@ -2,24 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Light mode (default) ─── */
+/* ─── Light mode ─── */
 :root {
-  --background: 250 250 252;
-  --foreground: 15 15 20;
+  --background: 248 249 251;
+  --foreground: 15 23 42;
   --card: 255 255 255;
-  --card-hover: 245 245 248;
-  --border: 228 228 235;
-  --muted: 240 240 245;
-  --muted-foreground: 100 100 115;
+  --card-hover: 241 245 249;
+  --border: 226 232 240;
+  --muted: 241 245 249;
+  --muted-foreground: 100 116 139;
   --accent: 29 185 84;
   --accent-foreground: 255 255 255;
   --overlay: 255 255 255;
-  --overlay-border: 228 228 235;
-  --input: 245 245 248;
-  --input-border: 210 210 220;
-  --nav-bg: 250 250 252;
-  --sidebar-bg: 248 248 252;
-  --badge-bg: 240 240 245;
+  --overlay-border: 226 232 240;
+  --input: 255 255 255;
+  --input-border: 203 213 225;
+  --nav-bg: 255 255 255;
+  --sidebar-bg: 255 255 255;
+  --badge-bg: 241 245 249;
   --danger: 239 68 68;
 }
 
@@ -27,19 +27,19 @@
 .dark {
   --background: 11 10 18;
   --foreground: 255 255 255;
-  --card: 8 8 15;
-  --card-hover: 14 14 22;
+  --card: 14 13 22;
+  --card-hover: 22 21 34;
   --border: 255 255 255 / 0.1;
-  --muted: 255 255 255 / 0.1;
-  --muted-foreground: 255 255 255 / 0.5;
+  --muted: 255 255 255 / 0.08;
+  --muted-foreground: 160 160 175;
   --accent: 29 185 84;
   --accent-foreground: 0 0 0;
-  --overlay: 13 13 20;
-  --overlay-border: 255 255 255 / 0.1;
-  --input: 5 5 8;
-  --input-border: 255 255 255 / 0.1;
-  --nav-bg: 3 3 3;
-  --sidebar-bg: 8 8 15;
+  --overlay: 18 17 28;
+  --overlay-border: 255 255 255 / 0.12;
+  --input: 16 15 26;
+  --input-border: 255 255 255 / 0.12;
+  --nav-bg: 11 10 18;
+  --sidebar-bg: 11 10 18;
   --badge-bg: 255 255 255 / 0.08;
   --danger: 248 113 113;
 }
@@ -47,11 +47,12 @@
 html, body {
   padding: 0;
   margin: 0;
+  min-height: 100vh;
 }
 
 @layer base {
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-200;
   }
 }
 

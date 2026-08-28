@@ -80,7 +80,7 @@ export default function AdminGlobalMap() {
   const mapCenter: [number, number] =
     dbTrees.length > 0 && typeof dbTrees[0].lat === "number"
       ? [dbTrees[0].lat, dbTrees[0].lng]
-      : [9.082, 8.6753]
+      : [9.082, 8.6753] // Default Nigeria center
 
   function handleSelectTree(tree: any) {
     setSelectedTree(tree)
@@ -111,10 +111,10 @@ export default function AdminGlobalMap() {
       {/* Top Header & Stats */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="font-[family-name:var(--font-syne)] text-2xl font-bold">
-            Admin Global Map & Registry
+          <h1 className="font-[family-name:var(--font-syne)] text-2xl font-bold text-foreground">
+            Global Map & Tree Registry
           </h1>
-          <p className="mt-1 text-sm text-white/50">
+          <p className="mt-1 text-sm text-muted-foreground">
             Geographical registry mapping with live database coordinates and administrative controls.
           </p>
         </div>
@@ -122,7 +122,7 @@ export default function AdminGlobalMap() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setMapLayer(mapLayer === "standard" ? "satellite" : "standard")}
-            className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#08080f] px-3.5 py-2 text-xs font-semibold text-white/70 transition-colors hover:border-white/20 hover:text-white"
+            className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground transition-colors hover:border-[#1db954]/50"
           >
             <Layers className="h-4 w-4 text-[#1db954]" />
             <span>Layer: {mapLayer === "standard" ? "Street Map" : "Satellite"}</span>
@@ -134,74 +134,74 @@ export default function AdminGlobalMap() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div
           onClick={() => setActiveFilter("all")}
-          className={`cursor-pointer rounded-xl border p-4 transition-all ${
+          className={`cursor-pointer rounded-2xl border p-4 transition-all ${
             activeFilter === "all"
-              ? "border-[#1db954]/50 bg-[#1db954]/10"
-              : "border-white/10 bg-[#08080f] hover:border-white/20"
+              ? "border-[#1db954] bg-[#1db954]/10"
+              : "border-border bg-card hover:border-[#1db954]/40"
           }`}
         >
-          <div className="text-xl font-bold font-[family-name:var(--font-space-mono)] text-white">
+          <div className="text-xl font-bold font-[family-name:var(--font-space-mono)] text-foreground">
             {counts.total}
           </div>
-          <div className="mt-1 text-xs text-white/50">Total in Database</div>
+          <div className="mt-1 text-xs text-muted-foreground">Total in Database</div>
         </div>
 
         <div
           onClick={() => setActiveFilter("pending")}
-          className={`cursor-pointer rounded-xl border p-4 transition-all ${
+          className={`cursor-pointer rounded-2xl border p-4 transition-all ${
             activeFilter === "pending"
-              ? "border-[#f0a830]/50 bg-[#f0a830]/10"
-              : "border-white/10 bg-[#08080f] hover:border-white/20"
+              ? "border-[#f0a830] bg-[#f0a830]/10"
+              : "border-border bg-card hover:border-[#f0a830]/40"
           }`}
         >
           <div className="flex items-center justify-between">
             <span className="text-xl font-bold font-[family-name:var(--font-space-mono)] text-[#f0a830]">
               {counts.pending}
             </span>
-            <Clock className="h-4 w-4 text-[#f0a830]/70" />
+            <Clock className="h-4 w-4 text-[#f0a830]" />
           </div>
-          <div className="mt-1 text-xs text-white/50">Pending Review</div>
+          <div className="mt-1 text-xs text-muted-foreground">Pending Review</div>
         </div>
 
         <div
           onClick={() => setActiveFilter("verified")}
-          className={`cursor-pointer rounded-xl border p-4 transition-all ${
+          className={`cursor-pointer rounded-2xl border p-4 transition-all ${
             activeFilter === "verified"
-              ? "border-[#1db954]/50 bg-[#1db954]/10"
-              : "border-white/10 bg-[#08080f] hover:border-white/20"
+              ? "border-[#1db954] bg-[#1db954]/10"
+              : "border-border bg-card hover:border-[#1db954]/40"
           }`}
         >
           <div className="flex items-center justify-between">
             <span className="text-xl font-bold font-[family-name:var(--font-space-mono)] text-[#1db954]">
               {counts.verified}
             </span>
-            <CheckCircle className="h-4 w-4 text-[#1db954]/70" />
+            <CheckCircle className="h-4 w-4 text-[#1db954]" />
           </div>
-          <div className="mt-1 text-xs text-white/50">Verified</div>
+          <div className="mt-1 text-xs text-muted-foreground">Verified</div>
         </div>
 
         <div
           onClick={() => setActiveFilter("minted")}
-          className={`cursor-pointer rounded-xl border p-4 transition-all ${
+          className={`cursor-pointer rounded-2xl border p-4 transition-all ${
             activeFilter === "minted"
-              ? "border-[#a78bfa]/50 bg-[#a78bfa]/10"
-              : "border-white/10 bg-[#08080f] hover:border-white/20"
+              ? "border-[#a78bfa] bg-[#a78bfa]/10"
+              : "border-border bg-card hover:border-[#a78bfa]/40"
           }`}
         >
           <div className="flex items-center justify-between">
             <span className="text-xl font-bold font-[family-name:var(--font-space-mono)] text-[#a78bfa]">
               {counts.minted}
             </span>
-            <Sparkles className="h-4 w-4 text-[#a78bfa]/70" />
+            <Sparkles className="h-4 w-4 text-[#a78bfa]" />
           </div>
-          <div className="mt-1 text-xs text-white/50">NFT Minted</div>
+          <div className="mt-1 text-xs text-muted-foreground">NFT Minted</div>
         </div>
       </div>
 
       {/* Main Split Layout: Interactive Map + Registry Panel */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         {/* Left: Map View (7 cols) */}
-        <div className="relative h-[560px] overflow-hidden rounded-2xl border border-white/10 bg-[#08080f] lg:col-span-7">
+        <div className="relative h-[560px] overflow-hidden rounded-3xl border border-border bg-card lg:col-span-7">
           <MapContainer
             center={mapCenter}
             zoom={dbTrees.length > 1 ? 5 : 7}
@@ -274,11 +274,11 @@ export default function AdminGlobalMap() {
           </MapContainer>
 
           {/* Map Legend Overlay */}
-          <div className="absolute left-4 top-4 z-[400] rounded-xl border border-white/10 bg-[#08080f]/90 p-3 backdrop-blur-md">
-            <div className="mb-2 text-[9px] font-bold uppercase tracking-wider text-white/40">
+          <div className="absolute left-4 top-4 z-[400] rounded-2xl border border-border bg-card/90 p-3.5 backdrop-blur-md shadow-lg">
+            <div className="mb-2 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
               Live Map Legend
             </div>
-            <div className="flex flex-col gap-1.5 text-xs text-white/70">
+            <div className="flex flex-col gap-1.5 text-xs text-foreground font-medium">
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#1db954]" />
                 <span>Verified ({counts.verified})</span>
@@ -296,25 +296,25 @@ export default function AdminGlobalMap() {
         </div>
 
         {/* Right: Synced Tree Registry & Inspector (5 cols) */}
-        <div className="flex h-[560px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#08080f] lg:col-span-5">
+        <div className="flex h-[560px] flex-col overflow-hidden rounded-3xl border border-border bg-card lg:col-span-5">
           {/* Registry Header & Search */}
-          <div className="border-b border-white/10 p-4">
+          <div className="border-b border-border p-4">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-[family-name:var(--font-syne)] text-base font-bold text-white">
+              <h2 className="font-[family-name:var(--font-syne)] text-base font-bold text-foreground">
                 Tree Registry ({filteredTrees.length})
               </h2>
-              <span className="text-xs text-white/40">Click row to locate</span>
+              <span className="text-xs text-muted-foreground">Click row to locate</span>
             </div>
 
             {/* Search */}
             <div className="relative mb-3">
-              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/40" />
+              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by name, species, city, wallet..."
-                className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-2 pl-9 pr-3 text-xs text-white placeholder-white/30 outline-none transition-colors focus:border-[#1db954]/40"
+                className="w-full rounded-xl border border-border bg-input py-2 pl-9 pr-3 text-xs text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-[#1db954]/60"
               />
             </div>
 
@@ -329,10 +329,10 @@ export default function AdminGlobalMap() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveFilter(tab.id)}
-                  className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                  className={`rounded-xl px-2.5 py-1 text-[11px] font-semibold transition-colors ${
                     activeFilter === tab.id
-                      ? "bg-white/15 text-white"
-                      : "text-white/40 hover:text-white"
+                      ? "bg-[#1db954] text-black font-bold"
+                      : "border border-border bg-card text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {tab.label}
@@ -342,9 +342,9 @@ export default function AdminGlobalMap() {
           </div>
 
           {/* Registry List */}
-          <div className="flex-1 overflow-y-auto divide-y divide-white/5 p-2">
+          <div className="flex-1 overflow-y-auto divide-y divide-border p-2">
             {filteredTrees.length === 0 ? (
-              <div className="py-12 text-center text-xs text-white/40">
+              <div className="py-12 text-center text-xs text-muted-foreground">
                 {search ? "No trees match your search." : "No trees in this filter category."}
               </div>
             ) : (
@@ -357,24 +357,24 @@ export default function AdminGlobalMap() {
                   <div
                     key={t._id}
                     onClick={() => handleSelectTree(t)}
-                    className={`cursor-pointer rounded-xl p-3 transition-all ${
+                    className={`cursor-pointer rounded-2xl p-3 transition-all ${
                       isSelected
-                        ? "border border-[#1db954]/40 bg-[#1db954]/10"
-                        : "hover:bg-white/[0.03]"
+                        ? "border border-[#1db954] bg-[#1db954]/10"
+                        : "hover:bg-card-hover"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <div className="truncate text-sm font-bold text-white">{t.name}</div>
-                        <div className="truncate text-xs text-white/50">{t.species}</div>
-                        <div className="mt-1 flex items-center gap-1 text-[11px] text-white/70">
+                        <div className="truncate text-sm font-bold text-foreground">{t.name}</div>
+                        <div className="truncate text-xs text-muted-foreground">{t.species}</div>
+                        <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
                           <MapPin className="h-3 w-3 text-[#1db954]" />
                           <span className="truncate">{t.location}</span>
                         </div>
                       </div>
 
                       <span
-                        className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+                        className="rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
                         style={{
                           color,
                           backgroundColor: `${color}1f`,
@@ -385,7 +385,7 @@ export default function AdminGlobalMap() {
                     </div>
 
                     {/* Coordinates & Actions */}
-                    <div className="mt-2.5 flex items-center justify-between border-t border-white/5 pt-2 text-[10px] text-white/40">
+                    <div className="mt-2.5 flex items-center justify-between border-t border-border/60 pt-2 text-[10px] text-muted-foreground">
                       <span className="font-mono">
                         {typeof t.lat === "number" ? t.lat.toFixed(4) : "—"},{" "}
                         {typeof t.lng === "number" ? t.lng.toFixed(4) : "—"}
@@ -394,7 +394,7 @@ export default function AdminGlobalMap() {
                       <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => setSatelliteView(t)}
-                          className="flex items-center gap-1 rounded bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/80 hover:bg-white/20"
+                          className="flex items-center gap-1 rounded-lg bg-muted px-2 py-0.5 text-[10px] font-medium text-foreground hover:bg-muted/80"
                           title="View close-up satellite imagery"
                         >
                           <Eye className="h-3 w-3" />
@@ -430,10 +430,10 @@ export default function AdminGlobalMap() {
 
           {/* Selected Tree Inspector Footer */}
           {selectedTree && (
-            <div className="border-t border-white/10 bg-black/40 p-3">
+            <div className="border-t border-border bg-muted/50 p-3">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-white">Selected: {selectedTree.name}</span>
-                <span className="font-mono text-[10px] text-white/50 truncate max-w-[160px]">
+                <span className="font-medium text-foreground">Selected: {selectedTree.name}</span>
+                <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[160px]">
                   {selectedTree.walletAddress}
                 </span>
               </div>
@@ -444,18 +444,18 @@ export default function AdminGlobalMap() {
 
       {/* Close-up Satellite Modal */}
       {satelliteView && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-white/10 bg-[#0b0a12] shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-xl overflow-hidden rounded-3xl border border-border bg-overlay shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <div>
-                <div className="text-base font-bold text-white">{satelliteView.name}</div>
-                <div className="text-xs text-white/50">
+                <div className="text-base font-bold text-foreground">{satelliteView.name}</div>
+                <div className="text-xs text-muted-foreground">
                   {satelliteView.species} &bull; {satelliteView.location}
                 </div>
               </div>
               <button
                 onClick={() => setSatelliteView(null)}
-                className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/70 hover:bg-white/20"
+                className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-foreground hover:bg-muted/80"
               >
                 Close
               </button>
@@ -486,7 +486,7 @@ export default function AdminGlobalMap() {
               </MapContainer>
             </div>
 
-            <div className="flex items-center justify-between border-t border-white/10 px-5 py-3 text-xs text-white/40">
+            <div className="flex items-center justify-between border-t border-border px-5 py-3 text-xs text-muted-foreground">
               <span>
                 Coordinates: {satelliteView.lat?.toFixed(5)}, {satelliteView.lng?.toFixed(5)}
               </span>

@@ -12,7 +12,6 @@ import {
   Check,
   Sparkles,
   MapPin,
-  Calendar,
   ShieldCheck,
   AlertCircle,
 } from "lucide-react"
@@ -36,7 +35,6 @@ export default function DashboardCampaignsPage() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
   const [joiningId, setJoiningId] = useState<string | null>(null)
   const [joinedMap, setJoinedMap] = useState<Record<string, boolean>>({})
 
@@ -47,7 +45,6 @@ export default function DashboardCampaignsPage() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
     setError("")
-    setSuccess("")
     setLoading(true)
 
     try {
@@ -61,7 +58,6 @@ export default function DashboardCampaignsPage() {
         participantLimit: parseInt(form.participantLimit, 10) || 10,
         description: form.description,
       })
-      setSuccess("Campaign created successfully!")
       setForm({ name: "", region: "", participantLimit: "100", description: "" })
       setShowCreateModal(false)
     } catch (err: unknown) {
@@ -107,10 +103,10 @@ export default function DashboardCampaignsPage() {
       {/* Header */}
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="font-[family-name:var(--font-syne)] text-2xl font-bold">
+          <h1 className="font-[family-name:var(--font-syne)] text-2xl font-bold text-foreground">
             Planting Campaigns
           </h1>
-          <p className="mt-1 text-sm text-white/50">
+          <p className="mt-1 text-sm text-muted-foreground">
             Coordinate regional tree planting initiatives, manage participants, and drive community stewardship.
           </p>
         </div>
@@ -128,45 +124,45 @@ export default function DashboardCampaignsPage() {
 
       {/* Stats row */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-xl border border-white/10 bg-[#08080f] p-4">
-          <div className="text-xl font-bold font-[family-name:var(--font-space-mono)] text-white">
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="text-xl font-bold font-[family-name:var(--font-space-mono)] text-foreground">
             {campaigns.length}
           </div>
-          <div className="mt-1 text-xs text-white/50">Active Campaigns</div>
+          <div className="mt-1 text-xs text-muted-foreground">Active Campaigns</div>
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-[#08080f] p-4">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <div className="text-xl font-bold font-[family-name:var(--font-space-mono)] text-[#1db954]">
             {totalParticipants}
           </div>
-          <div className="mt-1 text-xs text-white/50">Participants Joined</div>
+          <div className="mt-1 text-xs text-muted-foreground">Participants Joined</div>
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-[#08080f] p-4">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <div className="text-xl font-bold font-[family-name:var(--font-space-mono)] text-[#a78bfa]">
             {totalCapacity}
           </div>
-          <div className="mt-1 text-xs text-white/50">Total Target Goal</div>
+          <div className="mt-1 text-xs text-muted-foreground">Total Target Goal</div>
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-[#08080f] p-4">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1db954]">
             <ShieldCheck className="h-4 w-4" />
             <span>Verified On-Chain</span>
           </div>
-          <div className="mt-2 text-[10px] text-white/40">Proof of stewardship</div>
+          <div className="mt-2 text-[10px] text-muted-foreground">Proof of stewardship</div>
         </div>
       </div>
 
       {/* Campaigns Grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {campaigns.length === 0 ? (
-          <div className="col-span-full rounded-2xl border border-white/10 bg-[#08080f] p-12 text-center text-sm text-white/40">
+          <div className="col-span-full rounded-3xl border border-border bg-card p-12 text-center text-sm text-muted-foreground">
             No campaigns currently active.{" "}
             {isNatureHero && (
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="text-[#1db954] underline hover:text-[#1db954]/80 ml-1"
+                className="text-[#1db954] underline hover:text-[#1db954]/80 ml-1 font-semibold"
               >
                 Create the first campaign
               </button>
@@ -181,15 +177,15 @@ export default function DashboardCampaignsPage() {
             return (
               <div
                 key={c._id}
-                className="flex flex-col justify-between rounded-2xl border border-white/10 bg-[#08080f] p-6 transition-all hover:border-[#1db954]/30"
+                className="flex flex-col justify-between rounded-3xl border border-border bg-card p-6 shadow-sm transition-all hover:border-[#1db954]/40 hover:shadow-md"
               >
                 <div>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h2 className="font-[family-name:var(--font-syne)] text-lg font-bold text-white">
+                      <h2 className="font-[family-name:var(--font-syne)] text-lg font-bold text-foreground">
                         {c.name}
                       </h2>
-                      <div className="mt-1 flex items-center gap-1 text-xs text-white/50">
+                      <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="h-3 w-3 text-[#1db954]" />
                         <span>{c.region}</span>
                       </div>
@@ -198,7 +194,7 @@ export default function DashboardCampaignsPage() {
                     {isAdmin && (
                       <button
                         onClick={() => handleRemove(c._id)}
-                        className="rounded-lg p-1.5 text-white/30 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                        className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
                         title="Delete Campaign (Admin)"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -206,7 +202,7 @@ export default function DashboardCampaignsPage() {
                     )}
                   </div>
 
-                  <p className="my-4 text-xs leading-relaxed text-white/70">
+                  <p className="my-4 text-xs leading-relaxed text-muted-foreground">
                     {c.description}
                   </p>
                 </div>
@@ -214,11 +210,11 @@ export default function DashboardCampaignsPage() {
                 <div>
                   {/* Progress bar */}
                   <div className="mb-2">
-                    <div className="flex items-center justify-between text-[11px] text-white/50 mb-1">
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
                       <span>Progress</span>
-                      <span className="font-mono text-white/70">{pct}%</span>
+                      <span className="font-mono text-foreground font-semibold">{pct}%</span>
                     </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                       <div
                         className="h-full rounded-full bg-[#1db954] transition-all duration-500"
                         style={{ width: `${pct}%` }}
@@ -226,9 +222,9 @@ export default function DashboardCampaignsPage() {
                     </div>
                   </div>
 
-                  <div className="mb-4 flex items-center justify-between border-t border-white/5 pt-3 text-[11px] text-white/40">
+                  <div className="mb-4 flex items-center justify-between border-t border-border pt-3 text-[11px] text-muted-foreground">
                     <span className="flex items-center gap-1.5">
-                      <Users className="h-3.5 w-3.5 text-white/60" />
+                      <Users className="h-3.5 w-3.5" />
                       <span>
                         {c.joined} / {c.participantLimit} joined
                       </span>
@@ -243,7 +239,7 @@ export default function DashboardCampaignsPage() {
                       isJoined
                         ? "bg-[#1db954]/20 text-[#1db954]"
                         : isFull
-                          ? "cursor-not-allowed bg-white/10 text-white/30"
+                          ? "cursor-not-allowed bg-muted text-muted-foreground"
                           : "bg-[#1db954] text-black hover:bg-[#1db954]/90 hover:scale-[1.02]"
                     }`}
                   >
@@ -272,20 +268,20 @@ export default function DashboardCampaignsPage() {
 
       {/* Create Campaign Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-[#0c0c14] p-6 shadow-2xl">
-            <div className="mb-5 flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-border bg-overlay p-6 shadow-2xl">
+            <div className="mb-5 flex items-center justify-between border-b border-border pb-4">
               <div>
-                <h2 className="font-[family-name:var(--font-syne)] text-lg font-bold text-white">
+                <h2 className="font-[family-name:var(--font-syne)] text-lg font-bold text-foreground">
                   Create Planting Campaign
                 </h2>
-                <p className="text-xs text-white/50">
+                <p className="text-xs text-muted-foreground">
                   Launch a new community reforestation initiative.
                 </p>
               </div>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70 hover:bg-white/20"
+                className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
               >
                 Cancel
               </button>
@@ -293,7 +289,7 @@ export default function DashboardCampaignsPage() {
 
             <form onSubmit={handleCreate} className="flex flex-col gap-4">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-white/70">
+                <label className="mb-1.5 block text-xs font-semibold text-foreground">
                   Campaign Title
                 </label>
                 <input
@@ -301,13 +297,13 @@ export default function DashboardCampaignsPage() {
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="e.g. Niger Delta Mangrove Initiative"
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs text-white outline-none transition-colors focus:border-[#1db954]/50"
+                  className="w-full rounded-xl border border-border bg-input px-4 py-2.5 text-xs text-foreground outline-none transition-colors focus:border-[#1db954]/50"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-white/70">
+                  <label className="mb-1.5 block text-xs font-semibold text-foreground">
                     Target Region / City
                   </label>
                   <input
@@ -315,12 +311,12 @@ export default function DashboardCampaignsPage() {
                     value={form.region}
                     onChange={(e) => setForm({ ...form, region: e.target.value })}
                     placeholder="e.g. Lagos, Nigeria"
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs text-white outline-none transition-colors focus:border-[#1db954]/50"
+                    className="w-full rounded-xl border border-border bg-input px-4 py-2.5 text-xs text-foreground outline-none transition-colors focus:border-[#1db954]/50"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-semibold text-white/70">
+                  <label className="mb-1.5 block text-xs font-semibold text-foreground">
                     Participant Limit
                   </label>
                   <input
@@ -330,13 +326,13 @@ export default function DashboardCampaignsPage() {
                     value={form.participantLimit}
                     onChange={(e) => setForm({ ...form, participantLimit: e.target.value })}
                     placeholder="100"
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs text-white outline-none transition-colors focus:border-[#1db954]/50"
+                    className="w-full rounded-xl border border-border bg-input px-4 py-2.5 text-xs text-foreground outline-none transition-colors focus:border-[#1db954]/50"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-white/70">
+                <label className="mb-1.5 block text-xs font-semibold text-foreground">
                   Description & Instructions
                 </label>
                 <textarea
@@ -345,7 +341,7 @@ export default function DashboardCampaignsPage() {
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   placeholder="Describe the campaign objectives, species to plant, and participant requirements..."
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs text-white outline-none transition-colors focus:border-[#1db954]/50"
+                  className="w-full rounded-xl border border-border bg-input px-4 py-2.5 text-xs text-foreground outline-none transition-colors focus:border-[#1db954]/50"
                 />
               </div>
 
@@ -356,11 +352,11 @@ export default function DashboardCampaignsPage() {
                 </div>
               )}
 
-              <div className="mt-2 flex items-center justify-end gap-3 border-t border-white/10 pt-4">
+              <div className="mt-2 flex items-center justify-end gap-3 border-t border-border pt-4">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="rounded-xl border border-white/15 px-4 py-2 text-xs font-medium text-white/70 hover:bg-white/5"
+                  className="rounded-xl border border-border px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground"
                 >
                   Cancel
                 </button>

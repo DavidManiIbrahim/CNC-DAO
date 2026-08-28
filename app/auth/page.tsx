@@ -22,7 +22,6 @@ export default function AuthPage() {
   const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [passwordFocused, setPasswordFocused] = useState(false)
   const [convexReady, setConvexReady] = useState(true)
 
   const registerMutation = useMutation(api.users.register)
@@ -86,15 +85,15 @@ export default function AuthPage() {
   }
 
   return (
-    <main className="bg-[#0b0a12] text-white font-[family-name:var(--font-space-grotesk)]">
+    <main className="bg-background text-foreground font-[family-name:var(--font-space-grotesk)]">
       <Header />
 
       <section className="flex min-h-[80vh] items-center justify-center px-6 py-16 md:px-16">
         <Reveal className="w-full flex justify-center">
-          <div className="w-full max-w-md rounded-2xl border border-[#1db954]/20 bg-gradient-to-b from-[#12121c] to-[#08080f] p-8 shadow-[0_0_60px_-15px_rgba(29,185,84,0.25)]">
+          <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-xl">
             {!convexReady ? (
               <div className="py-8 text-center">
-                <p className="text-white/70">
+                <p className="text-muted-foreground">
                   Convex backend not configured. Run{" "}
                   <code className="text-[#1db954]">npx convex dev</code>{" "}
                   and add <code className="text-[#1db954]">NEXT_PUBLIC_CONVEX_URL</code> to your .env.local file.
@@ -111,14 +110,14 @@ export default function AuthPage() {
 
                 <div className="mb-8 text-center">
                   <img
-                    src="https://framerusercontent.com/images/XkdqyILHzud8shJDghKw5DhZuw.png"
+                    src="/favicon.png"
                     alt="CNC DAO"
                     className="mx-auto mb-4 h-10 w-10 object-cover"
                   />
-                  <h1 className="mb-1 font-[family-name:var(--font-syne)] text-2xl font-bold">
+                  <h1 className="mb-1 font-[family-name:var(--font-syne)] text-2xl font-bold text-foreground">
                     {mode === "login" ? "Welcome Back" : "Join CNC DAO"}
                   </h1>
-                  <p className="text-sm text-white/50">
+                  <p className="text-sm text-muted-foreground">
                     {mode === "login"
                       ? "Sign in with your email and password"
                       : "Create an account to get started"}
@@ -128,7 +127,7 @@ export default function AuthPage() {
                 <form onSubmit={handleSubmit} className="mb-6 flex flex-col gap-4">
                   {mode === "register" && (
                     <div>
-                      <label htmlFor="name" className="mb-1 block text-xs font-medium text-white/60">
+                      <label htmlFor="name" className="mb-1 block text-xs font-semibold text-foreground">
                         Name (optional)
                       </label>
                       <input
@@ -137,13 +136,13 @@ export default function AuthPage() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Your name"
-                        className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-[#1db954]/40"
+                        className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-[#1db954]/60"
                       />
                     </div>
                   )}
 
                   <div>
-                    <label htmlFor="email" className="mb-1 block text-xs font-medium text-white/60">
+                    <label htmlFor="email" className="mb-1 block text-xs font-semibold text-foreground">
                       Email
                     </label>
                     <input
@@ -153,12 +152,12 @@ export default function AuthPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
                       required
-                      className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-[#1db954]/40"
+                      className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-[#1db954]/60"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="password" className="mb-1 block text-xs font-medium text-white/60">
+                    <label htmlFor="password" className="mb-1 block text-xs font-semibold text-foreground">
                       Password
                     </label>
                     <div className="relative">
@@ -167,12 +166,10 @@ export default function AuthPage() {
                         type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        onFocus={() => setPasswordFocused(true)}
-                        onBlur={() => setPasswordFocused(false)}
                         placeholder={mode === "register" ? "At least 6 characters" : "Your password"}
                         required
                         minLength={6}
-                        className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 pr-11 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-[#1db954]/40"
+                        className="w-full rounded-xl border border-border bg-input px-4 py-3 pr-11 text-sm text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-[#1db954]/60"
                       />
                       <button
                         type="button"
@@ -186,14 +183,14 @@ export default function AuthPage() {
                   </div>
 
                   {error && (
-                    <div className="flex items-start gap-2.5 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                    <div className="flex items-start gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
                       <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
                       <span>{error}</span>
                     </div>
                   )}
 
                   {success && (
-                    <div className="flex items-start gap-2.5 rounded-xl border border-[#1db954]/20 bg-[#1db954]/10 px-4 py-3 text-sm text-[#1db954]">
+                    <div className="flex items-start gap-2.5 rounded-2xl border border-[#1db954]/20 bg-[#1db954]/10 px-4 py-3 text-sm text-[#1db954]">
                       <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
                       <span>{success}</span>
                     </div>
@@ -212,7 +209,7 @@ export default function AuthPage() {
                   </button>
                 </form>
 
-                <div className="flex items-center justify-center gap-1 text-sm text-white/50">
+                <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
                   <span>
                     {mode === "login" ? "Don't have an account?" : "Already have an account?"}
                   </span>
@@ -221,7 +218,7 @@ export default function AuthPage() {
                       setMode(mode === "login" ? "register" : "login")
                       setError("")
                     }}
-                    className="font-medium text-[#1db954] hover:underline"
+                    className="font-semibold text-[#1db954] hover:underline"
                   >
                     {mode === "login" ? "Register" : "Sign In"}
                   </button>

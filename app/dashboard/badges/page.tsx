@@ -17,38 +17,38 @@ export default function BadgesPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-8">
-        <h1 className="font-[family-name:var(--font-syne)] text-2xl font-bold">Badges</h1>
-        <p className="mt-1 text-sm text-white/50">
+        <h1 className="font-[family-name:var(--font-syne)] text-2xl font-bold text-foreground">Badges</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Earned by planting, verifying, and showing up for the network.
         </p>
       </div>
 
-      <div className="mb-8 rounded-xl border border-white/10 bg-[#08080f] p-4 text-center">
-        <div className="font-[family-name:var(--font-space-mono)] text-xl font-bold">
+      <div className="mb-8 rounded-2xl border border-border bg-card p-5 text-center">
+        <div className="font-[family-name:var(--font-space-mono)] text-2xl font-bold text-foreground">
           {earnedCount} / {badges.length}
         </div>
-        <div className="mt-1 text-xs text-white/40">badges earned</div>
+        <div className="mt-1 text-xs text-muted-foreground">badges earned</div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {badges.map((b) => (
           <div
             key={b.id}
-            className={`rounded-xl border p-4 text-center transition-all ${
+            className={`rounded-2xl border p-5 text-center transition-all ${
               b.earned
-                ? "border-[#1db954]/30 bg-[#1db954]/[0.06]"
-                : "border-white/5 bg-white/[0.02] opacity-40"
+                ? "border-[#1db954]/30 bg-[#1db954]/[0.08]"
+                : "border-border bg-card opacity-50"
             }`}
           >
             <div
-              className={`mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full ${
-                b.earned ? "bg-[#1db954]/15 text-[#1db954]" : "bg-white/5 text-white/30"
+              className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl ${
+                b.earned ? "bg-[#1db954]/15 text-[#1db954]" : "bg-muted text-muted-foreground"
               }`}
             >
-              <BadgeIcon name={b.icon} className="h-5 w-5" />
+              <BadgeIcon name={b.icon} className="h-6 w-6" />
             </div>
-            <div className="mb-0.5 text-xs font-bold">{b.title}</div>
-            <div className="text-[10px] leading-tight text-white/40">{b.description}</div>
+            <div className="mb-1 text-sm font-bold text-foreground">{b.title}</div>
+            <div className="text-xs leading-relaxed text-muted-foreground">{b.description}</div>
           </div>
         ))}
       </div>
