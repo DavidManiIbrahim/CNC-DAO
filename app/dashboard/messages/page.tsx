@@ -22,10 +22,10 @@ function AdminMessagesContent() {
   const isAdmin = user?.role === "admin"
   const adminId = user?.userId
 
-  const messages = useQuery(api.messages.list, {}) ?? []
+  const messages = useQuery(api.users.listMessages, {}) ?? []
 
-  const updateStatus = useMutation(api.messages.updateStatus)
-  const removeMessage = useMutation(api.messages.remove)
+  const updateStatus = useMutation(api.users.updateMessageStatus)
+  const removeMessage = useMutation(api.users.removeMessage)
 
   const [activeTab, setActiveTab] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState("")

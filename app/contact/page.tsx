@@ -18,7 +18,7 @@ export default function ContactPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const submitMessage = useMutation(api.messages.submit)
+  const submitMessage = useMutation(api.users.submitMessage)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
