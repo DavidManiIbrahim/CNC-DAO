@@ -9,7 +9,7 @@ import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { IconArrow } from "@/components/Icons"
 import { useSessionUser } from "@/lib/useAuth"
-import { Trash2, Users, Check, Sparkles, MapPin } from "lucide-react"
+import { Trash2, Edit2, Users, Check, Sparkles, MapPin } from "lucide-react"
 
 export default function CampaignsPage() {
   const user = useSessionUser()
@@ -133,15 +133,27 @@ export default function CampaignsPage() {
                         )}
                       </div>
 
-                      {isAdmin && (
-                        <button
-                          onClick={() => handleRemove(c._id)}
-                          className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
-                          title="Delete campaign (Admin)"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {isNatureHero && (
+                          <Link
+                            href="/dashboard/campaigns"
+                            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            title="Edit Campaign in Dashboard"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Link>
+                        )}
+
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleRemove(c._id)}
+                            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
+                            title="Delete campaign (Admin)"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     <p className="my-3 text-xs leading-relaxed text-muted-foreground line-clamp-2">

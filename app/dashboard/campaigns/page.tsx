@@ -9,6 +9,7 @@ import { resizeImage } from "@/lib/mockAuth"
 import {
   Plus,
   Trash2,
+  Edit2,
   Users,
   Check,
   Sparkles,
@@ -27,10 +28,13 @@ export default function DashboardCampaignsPage() {
   const isAdmin = user?.role === "admin"
 
   const createMutation = useMutation(api.campaigns.create)
+  const updateMutation = useMutation(api.campaigns.update)
   const joinMutation = useMutation(api.campaigns.join)
   const removeMutation = useMutation(api.campaigns.remove)
 
-  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [editingCampaign, setEditingCampaign] = useState<any | null>(null)
+
   const [form, setForm] = useState({
     name: "",
     region: "",
@@ -49,6 +53,27 @@ export default function DashboardCampaignsPage() {
   // Stats
   const totalParticipants = campaigns.reduce((acc: number, c: any) => acc + (c.joined || 0), 0)
   const totalCapacity = campaigns.reduce((acc: number, c: any) => acc + (c.participantLimit || 0), 0)
+
+  function openCreateModal() {
+    setEditingCampaign(null)
+    setForm({ name: "", region: "", participantLimit: "100", description: "" })
+    setImagePreview("")
+    setError("")
+    setShowModal(true)
+  }
+
+  function openEditModal(c: any) {
+    setEditingCampaign(c)
+    setForm({
+      name: c.name,
+      region: c.region,
+      participantLimit: String(c.participantLimit || 100),
+      description: c.description,
+    })
+    setImagePreview(c.imageUrl || "")
+    setError("")
+    setShowModal(true)
+  }
 
   async function handleImageFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -75,33 +100,46 @@ export default function DashboardCampaignsPage() {
     }
   }
 
-  async function handleCreate(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
     setLoading(true)
 
     try {
       if (!user?.userId) {
-        throw new Error("You must be logged in to create a campaign.")
+        throw new Error("You must be logged in to manage campaigns.")
       }
-      await createMutation({
-        creatorId: user.userId as any,
-        name: form.name,
-        region: form.region,
-        participantLimit: parseInt(form.participantLimit, 10) || 10,
-        description: form.description,
-        imageUrl: imagePreview || undefined,
-      })
-      setForm({ name: "", region: "", participantLimit: "100", description: "" })
-      setImagePreview("")
-      setShowCreateModal(false)
+
+      if (editingCampaign) {
+        await updateMutation({
+          adminId: user.userId as any,
+          campaignId: editingCampaign._id as any,
+          name: form.name,
+          region: form.region,
+          participantLimit: parseInt(form.participantLimit, 10) || 10,
+          description: form.description,
+          imageUrl: imagePreview || undefined,
+        })
+      } else {
+        await createMutation({
+          creatorId: user.userId as any,
+          name: form.name,
+          region: form.region,
+          participantLimit: parseInt(form.participantLimit, 10) || 10,
+          description: form.description,
+          imageUrl: imagePreview || undefined,
+        })
+      }
+
+      setShowModal(false)
+      setEditingCampaign(null)
     } catch (err: unknown) {
       if (err instanceof ConvexError) {
         setError(typeof err.data === "string" ? err.data : JSON.stringify(err.data))
       } else if (err instanceof Error) {
         setError(err.message)
       } else {
-        setError("Failed to create campaign. Please try again.")
+        setError("Failed to save campaign. Please try again.")
       }
     } finally {
       setLoading(false)
@@ -142,13 +180,13 @@ export default function DashboardCampaignsPage() {
             Planting Campaigns
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Coordinate regional tree planting initiatives, manage participants, and drive community stewardship.
+            Coordinate regional tree planting initiatives, manage participants, edit goals, and drive community stewardship.
           </p>
         </div>
 
         {isNatureHero && (
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={openCreateModal}
             className="flex items-center gap-2 self-start rounded-full bg-[#1db954] px-5 py-2.5 text-xs font-bold text-black transition-transform hover:scale-105"
           >
             <Plus className="h-4 w-4" />
@@ -196,7 +234,7 @@ export default function DashboardCampaignsPage() {
             No campaigns currently active.{" "}
             {isNatureHero && (
               <button
-                onClick={() => setShowCreateModal(true)}
+                onClick={openCreateModal}
                 className="text-[#1db954] underline hover:text-[#1db954]/80 ml-1 font-semibold"
               >
                 Create the first campaign
@@ -241,15 +279,27 @@ export default function DashboardCampaignsPage() {
                       )}
                     </div>
 
-                    {isAdmin && (
-                      <button
-                        onClick={() => handleRemove(c._id)}
-                        className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
-                        title="Delete Campaign (Admin)"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {isNatureHero && (
+                        <button
+                          onClick={() => openEditModal(c)}
+                          className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          title="Edit Campaign"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                      )}
+
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleRemove(c._id)}
+                          className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
+                          title="Delete Campaign (Admin)"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <p className="my-4 text-xs leading-relaxed text-muted-foreground">
@@ -316,28 +366,30 @@ export default function DashboardCampaignsPage() {
         )}
       </div>
 
-      {/* Create Campaign Modal */}
-      {showCreateModal && (
+      {/* Create / Edit Campaign Modal */}
+      {showModal && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-border bg-overlay p-6 shadow-2xl">
             <div className="mb-5 flex items-center justify-between border-b border-border pb-4">
               <div>
                 <h2 className="font-[family-name:var(--font-syne)] text-lg font-bold text-foreground">
-                  Create Planting Campaign
+                  {editingCampaign ? "Edit Planting Campaign" : "Create Planting Campaign"}
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  Launch a new community reforestation initiative.
+                  {editingCampaign
+                    ? "Update the campaign description, goals, and photo banner."
+                    : "Launch a new community reforestation initiative."}
                 </p>
               </div>
               <button
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => setShowModal(false)}
                 className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
               >
                 Cancel
               </button>
             </div>
 
-            <form onSubmit={handleCreate} className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-foreground">
                   Campaign Title
@@ -455,7 +507,7 @@ export default function DashboardCampaignsPage() {
               <div className="mt-2 flex items-center justify-end gap-3 border-t border-border pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => setShowModal(false)}
                   className="rounded-xl border border-border px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground"
                 >
                   Cancel
@@ -465,8 +517,17 @@ export default function DashboardCampaignsPage() {
                   disabled={loading || imageLoading}
                   className="flex items-center gap-1.5 rounded-xl bg-[#1db954] px-5 py-2 text-xs font-bold text-black hover:bg-[#1db954]/90 disabled:opacity-50"
                 >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>{loading ? "Creating..." : "Launch Campaign"}</span>
+                  {editingCampaign ? (
+                    <>
+                      <Check className="h-3.5 w-3.5" />
+                      <span>{loading ? "Updating..." : "Save Changes"}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>{loading ? "Creating..." : "Launch Campaign"}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

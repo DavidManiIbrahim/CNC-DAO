@@ -49,6 +49,35 @@ export const join = mutation({
   },
 })
 
+export const update = mutation({
+  args: {
+    adminId: v.id("users"),
+    campaignId: v.id("campaigns"),
+    name: v.string(),
+    region: v.string(),
+    participantLimit: v.number(),
+    description: v.string(),
+    imageUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const admin = await ctx.db.get(args.adminId)
+    if (!admin || (admin.role !== "admin" && admin.role !== "nature_hero")) {
+      throw new ConvexError("Only Admins and Nature Heroes can edit campaigns")
+    }
+    const campaign = await ctx.db.get(args.campaignId)
+    if (!campaign) throw new ConvexError("Campaign not found")
+
+    await ctx.db.patch(args.campaignId, {
+      name: args.name,
+      region: args.region,
+      participantLimit: args.participantLimit,
+      description: args.description,
+      imageUrl: args.imageUrl,
+    })
+    return await ctx.db.get(args.campaignId)
+  },
+})
+
 export const remove = mutation({
   args: {
     adminId: v.id("users"),
