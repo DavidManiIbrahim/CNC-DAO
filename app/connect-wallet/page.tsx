@@ -1,12 +1,17 @@
 "use client"
 
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { signIn } from "next-auth/react"
+import { useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { IconCheck, IconArrow } from "@/components/Icons"
-import { connectMockWallet } from "@/lib/mockAuth"
+import { getMockUser, connectMockWallet } from "@/lib/mockAuth"
+import { Mail } from "lucide-react"
 
 const wallets = [
   { name: "Phantom", note: "DETECTED", emoji: "👻" },
@@ -24,24 +29,35 @@ const guarantees = [
 
 export default function ConnectWalletPage() {
   const router = useRouter()
+  const [connecting, setConnecting] = useState(false)
+  const connectWallet = useMutation(api.users.connectWallet)
 
-  function handleConnect() {
-    // Mock connection — no real wallet adapter or Google OAuth wired up yet.
-    // Real Google sign-in needs an actual OAuth flow (e.g. NextAuth.js with
-    // a Google provider), separate from wallet connection, then linking
-    // that identity to a wallet address server-side. See lib/mockAuth.ts
-    // and README.md for what real auth integration needs.
-    connectMockWallet()
-    router.push("/dashboard")
+  async function handleConnect() {
+    if (connecting) return
+    setConnecting(true)
+    try {
+      const existing = getMockUser()
+      const walletAddress =
+        existing?.walletAddress || "Demo" + Math.floor(Math.random() * 9999)
+      const user = await connectWallet({ walletAddress })
+      connectMockWallet(walletAddress, user._id)
+      router.push("/dashboard")
+    } finally {
+      setConnecting(false)
+    }
+  }
+
+  function handleGoogleSignIn() {
+    signIn("google", { callbackUrl: "/dashboard" })
   }
 
   return (
-    <main className="bg-[#0b0a12] text-white font-[family-name:var(--font-space-grotesk)]">
+    <main className="bg-background text-foreground font-[family-name:var(--font-space-grotesk)]">
       <Header />
 
       <section className="flex min-h-[80vh] items-center justify-center px-6 py-16 md:px-16">
-        <Reveal>
-          <div className="mx-auto w-full max-w-md rounded-2xl border border-[#1db954]/20 bg-gradient-to-b from-[#12121c] to-[#08080f] p-8 shadow-[0_0_60px_-15px_rgba(29,185,84,0.25)]">
+        <Reveal className="w-full flex justify-center">
+          <div className="w-full max-w-lg rounded-3xl border border-border bg-card p-8 shadow-xl">
             <div className="mb-6 flex justify-center">
               <span className="flex items-center gap-1.5 rounded-full border border-[#1db954]/30 bg-[#1db954]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[#1db954]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#1db954]" />
@@ -51,14 +67,14 @@ export default function ConnectWalletPage() {
 
             <div className="mb-8 text-center">
               <img
-                src="https://framerusercontent.com/images/XkdqyILHzud8shJDghKw5DhZuw.png"
+                src="/favicon.png"
                 alt="CNC DAO"
                 className="mx-auto mb-4 h-10 w-10 object-cover"
               />
-              <h1 className="mb-1 font-[family-name:var(--font-syne)] text-2xl font-bold">
+              <h1 className="mb-1 font-[family-name:var(--font-syne)] text-2xl font-bold text-foreground">
                 Connect Wallet
               </h1>
-              <p className="text-sm text-white/50">Access your CNC DAO dashboard securely</p>
+              <p className="text-sm text-muted-foreground">Access your CNC DAO dashboard securely</p>
             </div>
 
             <div className="mb-8 flex flex-col gap-3">
@@ -66,13 +82,13 @@ export default function ConnectWalletPage() {
                 <button
                   key={w.name}
                   onClick={handleConnect}
-                  className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-left transition-colors hover:border-[#1db954]/40 hover:bg-white/[0.06]"
+                  className="flex items-center justify-between rounded-2xl border border-border bg-muted/50 px-4 py-3.5 text-left transition-colors hover:border-[#1db954]/40 hover:bg-muted"
                 >
                   <span className="flex items-center gap-3">
                     <span className="text-xl">{w.emoji}</span>
-                    <span className="text-sm font-medium">{w.name}</span>
+                    <span className="text-sm font-semibold text-foreground">{w.name}</span>
                   </span>
-                  <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-white/40">
+                  <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                     {w.note}
                     <IconArrow className="h-3 w-3 rotate-45" />
                   </span>
@@ -80,16 +96,24 @@ export default function ConnectWalletPage() {
               ))}
 
               <div className="my-1 flex items-center gap-3">
-                <span className="h-px flex-1 bg-white/10" />
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-white/30">
+                <span className="h-px flex-1 bg-border" />
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                   or
                 </span>
-                <span className="h-px flex-1 bg-white/10" />
+                <span className="h-px flex-1 bg-border" />
               </div>
 
+              <Link
+                href="/auth"
+                className="flex items-center justify-center gap-3 rounded-2xl border border-border bg-muted/50 px-4 py-3.5 text-left transition-colors hover:border-[#1db954]/40 hover:bg-muted"
+              >
+                <Mail className="h-5 w-5 text-foreground" />
+                <span className="text-sm font-semibold text-foreground">Sign in with Email</span>
+              </Link>
+
               <button
-                onClick={handleConnect}
-                className="flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white px-4 py-3.5 text-left transition-colors hover:bg-white/90"
+                onClick={handleGoogleSignIn}
+                className="flex items-center justify-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-sm transition-colors hover:bg-muted"
               >
                 <svg viewBox="0 0 24 24" className="h-5 w-5 flex-shrink-0">
                   <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.3h6.47a5.54 5.54 0 0 1-2.4 3.63v3h3.87c2.27-2.09 3.55-5.17 3.55-8.66Z" />
@@ -97,24 +121,24 @@ export default function ConnectWalletPage() {
                   <path fill="#FBBC05" d="M5.27 14.29a7.2 7.2 0 0 1 0-4.58V6.6H1.27a12 12 0 0 0 0 10.8l4-3.11Z" />
                   <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.94 1.19 15.24 0 12 0A12 12 0 0 0 1.27 6.6l4 3.11C6.22 6.86 8.87 4.75 12 4.75Z" />
                 </svg>
-                <span className="text-sm font-medium text-[#0b0a12]">Sign in with Google</span>
+                <span className="text-sm font-semibold text-foreground">Sign in with Google</span>
               </button>
             </div>
 
-            <div className="mb-6 flex flex-col gap-2.5 border-t border-white/10 pt-6">
+            <div className="mb-6 flex flex-col gap-2.5 border-t border-border pt-6">
               {guarantees.map((g) => (
-                <div key={g} className="flex items-start gap-2 text-xs text-white/60">
-                  <IconCheck className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                  {g}
+                <div key={g} className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <IconCheck className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#1db954]" />
+                  <span>{g}</span>
                 </div>
               ))}
             </div>
 
-            <div className="flex items-center justify-between border-t border-white/10 pt-5 text-xs">
-              <button onClick={handleConnect} className="text-white/50 hover:text-white">
+            <div className="flex items-center justify-between border-t border-border pt-5 text-xs">
+              <button onClick={handleConnect} className="text-muted-foreground hover:text-foreground">
                 Continue in Demo Mode (Read-only)
               </button>
-              <Link href="/contact" className="text-white/50 hover:text-white">
+              <Link href="/contact" className="text-muted-foreground hover:text-foreground">
                 How connection works
               </Link>
             </div>

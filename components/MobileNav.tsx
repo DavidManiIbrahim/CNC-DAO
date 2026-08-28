@@ -23,24 +23,24 @@ export function MobileNav() {
         className="flex h-9 w-9 flex-col items-center justify-center gap-1.5"
       >
         <span
-          className={`h-0.5 w-5 bg-white transition-transform duration-300 ${
+          className={`h-0.5 w-5 bg-foreground transition-transform duration-300 ${
             open ? "translate-y-2 rotate-45" : ""
           }`}
         />
         <span
-          className={`h-0.5 w-5 bg-white transition-opacity duration-300 ${
+          className={`h-0.5 w-5 bg-foreground transition-opacity duration-300 ${
             open ? "opacity-0" : "opacity-100"
           }`}
         />
         <span
-          className={`h-0.5 w-5 bg-white transition-transform duration-300 ${
+          className={`h-0.5 w-5 bg-foreground transition-transform duration-300 ${
             open ? "-translate-y-2 -rotate-45" : ""
           }`}
         />
       </button>
 
       <div
-        className={`fixed inset-x-0 top-[65px] z-40 overflow-hidden border-b border-white/10 bg-[#030303] transition-[max-height] duration-300 ease-out ${
+        className={`fixed inset-x-0 top-[65px] z-40 overflow-hidden border-b border-border bg-background transition-[max-height] duration-300 ease-out ${
           open ? "max-h-[400px]" : "max-h-0"
         }`}
       >
@@ -50,7 +50,7 @@ export function MobileNav() {
               key={l.href}
               href={l.href}
               onClick={() => setOpen(false)}
-              className="rounded-lg px-3 py-3 text-sm text-white/80 transition-colors hover:bg-white/5 hover:text-white"
+              className="rounded-lg px-3 py-3 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               {l.label}
             </Link>

@@ -11,7 +11,7 @@ import {
 } from "@/lib/mockAuth"
 
 const roleLabel: Record<UserRole, { label: string; color: string }> = {
-  user: { label: "Registered User", color: "#cccccc" },
+  user: { label: "Registered User", color: "var(--muted-foreground)" },
   nature_hero_pending: { label: "Nature Hero — Pending Review", color: "#f0a830" },
   nature_hero: { label: "Nature Hero", color: "#1db954" },
   admin: { label: "Admin", color: "#a78bfa" },
@@ -45,18 +45,18 @@ export function PersonaCard() {
 
   if (!user) {
     return (
-      <div className="mx-auto flex max-w-md items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#08080f] px-6 py-5">
+      <div className="mx-auto flex max-w-md items-center justify-between gap-4 rounded-3xl border border-border bg-card p-5 shadow-md transition-all hover:border-[#1db954]/40">
         <div>
-          <div className="mb-1 text-sm font-semibold text-white">
+          <div className="mb-1 text-sm font-bold text-foreground">
             Build your Nature Persona
           </div>
-          <p className="text-xs text-white/50">
+          <p className="text-xs text-muted-foreground">
             Connect a wallet to track your trees and set a profile photo.
           </p>
         </div>
         <Link
           href="/connect-wallet"
-          className="flex-shrink-0 rounded-full bg-[#1db954] px-4 py-2 text-xs font-medium text-white transition-transform duration-200 hover:scale-105"
+          className="flex-shrink-0 rounded-full bg-[#1db954] px-5 py-2.5 text-xs font-bold text-black transition-transform duration-200 hover:scale-105"
         >
           Connect
         </Link>
@@ -67,7 +67,7 @@ export function PersonaCard() {
   const role = roleLabel[user.role]
 
   return (
-    <div className="mx-auto flex max-w-md items-center gap-4 rounded-2xl border border-white/10 bg-gradient-to-br from-[#12121c] to-[#08080f] px-6 py-5">
+    <div className="mx-auto flex max-w-md items-center gap-4 rounded-3xl border border-border bg-card p-5 shadow-md transition-all hover:border-[#1db954]/40">
       <div className="group relative flex-shrink-0">
         <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-[#1db954]/15 font-[family-name:var(--font-syne)] text-lg font-bold text-[#1db954]">
           {user.avatar ? (
@@ -79,10 +79,10 @@ export function PersonaCard() {
         <button
           onClick={() => fileRef.current?.click()}
           aria-label="Upload profile photo"
-          className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#08080f] bg-white text-[#0b0a12] transition-transform hover:scale-110"
+          className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-foreground text-background shadow transition-transform hover:scale-110"
         >
           {uploading ? (
-            <span className="h-2.5 w-2.5 animate-spin rounded-full border-[1.5px] border-[#0b0a12] border-t-transparent" />
+            <span className="h-2.5 w-2.5 animate-spin rounded-full border-[1.5px] border-background border-t-transparent" />
           ) : (
             <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none">
               <path
@@ -104,13 +104,13 @@ export function PersonaCard() {
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="truncate font-[family-name:var(--font-syne)] text-sm font-bold text-white">
+        <div className="truncate font-[family-name:var(--font-syne)] text-sm font-bold text-foreground">
           {user.displayName || user.walletAddress}
         </div>
-        <div className="mb-2 truncate text-xs font-semibold" style={{ color: role.color }}>
+        <div className="mb-1 truncate text-xs font-semibold" style={{ color: role.color }}>
           {role.label}
         </div>
-        <Link href="/dashboard" className="text-xs text-white/50 underline hover:text-white/80">
+        <Link href="/dashboard" className="text-xs font-medium text-muted-foreground underline hover:text-foreground">
           View full profile
         </Link>
       </div>

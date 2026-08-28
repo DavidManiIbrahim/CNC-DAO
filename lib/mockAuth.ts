@@ -15,7 +15,16 @@
 
 export type UserRole = "user" | "nature_hero_pending" | "nature_hero" | "admin"
 
+export const roleLabels: Record<UserRole, { label: string; color: string }> = {
+  user: { label: "Registered User", color: "#cccccc" },
+  nature_hero_pending: { label: "Nature Hero — Pending Review", color: "#f0a830" },
+  nature_hero: { label: "Nature Hero", color: "#1db954" },
+  admin: { label: "Admin", color: "#a78bfa" },
+}
+
 export type MockUser = {
+  /** Convex users document id — the server-side identity this session maps to. */
+  userId?: string
   walletAddress: string
   role: UserRole
   displayName?: string
@@ -42,13 +51,17 @@ export function setMockUser(user: MockUser) {
   window.dispatchEvent(new Event("mockuser:change"))
 }
 
-export function connectMockWallet(address: string = "Demo" + Math.floor(Math.random() * 9999)) {
+export function connectMockWallet(
+  address: string = "Demo" + Math.floor(Math.random() * 9999),
+  userId?: string,
+) {
   const existing = getMockUser()
   const user: MockUser = existing ?? {
     walletAddress: address,
     role: "user",
     joinedAt: new Date().toISOString(),
   }
+  if (userId) user.userId = userId
   setMockUser(user)
   return user
 }

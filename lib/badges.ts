@@ -1,5 +1,5 @@
 import type { MockUser } from "./mockAuth"
-import { getUserTrees } from "./registeredTrees"
+import type { RegisteredTree } from "./registeredTrees"
 
 export type Badge = {
   id: string
@@ -10,21 +10,21 @@ export type Badge = {
 }
 
 /**
- * Badges are computed from mock local state (role + trees submitted in this
- * browser). Once there's a real backend, this should instead read from
- * actual submission/verification history tied to the wallet address.
+ * Badges are computed from the user's registered trees (now read from the
+ * Convex `trees` table) and their role.
  */
-export function getBadges(user: MockUser): Badge[] {
-  const myTrees = getUserTrees()
+export function getBadges(user: MockUser, myTrees: RegisteredTree[] = []): Badge[] {
   const treeCount = myTrees.length
   const hasVerifiedTree = myTrees.some((t) => t.status === "verified" || t.status === "minted")
+  const isWalletConnected =
+    !user.walletAddress.startsWith("google:") && !user.walletAddress.startsWith("email:")
 
   return [
     {
       id: "wallet-connected",
       title: "Wallet Connected",
       description: "Connected a wallet to CNC DAO",
-      earned: true,
+      earned: isWalletConnected,
       icon: "seed",
     },
     {
