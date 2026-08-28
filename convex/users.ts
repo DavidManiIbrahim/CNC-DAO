@@ -241,6 +241,8 @@ export const removeUser = mutation({
   },
 })
 
+export const deleteUser = removeUser
+
 // ─── CONTACT INQUIRIES & MESSAGES HANDLERS ─────────────────────────
 export const listMessages = query({
   args: { adminId: v.optional(v.string()) },

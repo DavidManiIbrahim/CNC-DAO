@@ -11,6 +11,7 @@ import {
   Search,
   Shield,
   Crown,
+  Trash2,
 } from "lucide-react"
 
 export default function UsersPage() {
@@ -24,6 +25,7 @@ export default function UsersPage() {
   ) ?? []
 
   const setUserRole = useMutation(api.users.setUserRole)
+  const removeUser = useMutation(api.users.removeUser)
 
   const [searchQuery, setSearchQuery] = useState("")
   const [roleFilter, setRoleFilter] = useState<string>("all")
@@ -82,6 +84,31 @@ export default function UsersPage() {
     }
   }
 
+  async function handleDeleteUser(targetUserId: string, userName: string) {
+    if (!user?.userId || !isAdmin) return
+    if (targetUserId === user.userId) {
+      alert("You cannot delete your own active administrator account.")
+      return
+    }
+
+    if (!confirm(`Are you sure you want to permanently delete the account for ${userName}? This action is irreversible.`)) {
+      return
+    }
+
+    setActionLoadingId(targetUserId)
+    try {
+      await removeUser({
+        adminId: user.userId as any,
+        userId: targetUserId as any,
+      })
+    } catch (err) {
+      console.error("Failed to delete user account", err)
+      alert("Failed to delete user account. Please ensure you have admin permissions.")
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
   function formatUserDisplay(u: any) {
     if (u.name) return u.name
     if (u.displayName) return u.displayName
@@ -129,7 +156,7 @@ export default function UsersPage() {
             User Management & Roles
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage DAO member permissions, promote Nature Heroes, and assign Administrator privileges.
+            Manage DAO member permissions, assign Administrator privileges, and manage member accounts.
           </p>
         </div>
       </div>
@@ -239,9 +266,9 @@ export default function UsersPage() {
 
       {/* Users Table */}
       <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
-        <div className="min-w-[700px]">
+        <div className="min-w-[760px]">
           {/* Table Header */}
-          <div className="hidden grid-cols-[2fr_1.8fr_1.2fr_1fr_120px] items-center gap-4 border-b border-border bg-muted/70 px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground md:grid">
+          <div className="hidden grid-cols-[2fr_1.8fr_1.2fr_1fr_150px] items-center gap-4 border-b border-border bg-muted/70 px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground md:grid">
             <span className="flex items-center gap-1.5">
               <span>Member Profile</span>
             </span>
@@ -266,7 +293,7 @@ export default function UsersPage() {
                 return (
                   <div
                     key={u._id}
-                    className="grid grid-cols-1 gap-3 p-5 transition-colors hover:bg-card-hover md:grid-cols-[2fr_1.8fr_1.2fr_1fr_120px] md:items-center md:gap-4"
+                    className="grid grid-cols-1 gap-3 p-5 transition-colors hover:bg-card-hover md:grid-cols-[2fr_1.8fr_1.2fr_1fr_150px] md:items-center md:gap-4"
                   >
                     {/* User Profile */}
                     <div className="min-w-0 flex items-center gap-3">
@@ -366,6 +393,19 @@ export default function UsersPage() {
                           aria-label="Demote to Community Planter"
                         >
                           <UserX className="h-4 w-4" />
+                        </button>
+                      )}
+
+                      {/* Delete Account Button */}
+                      {!isSelf && (
+                        <button
+                          disabled={isLoading}
+                          onClick={() => handleDeleteUser(u._id, displayName)}
+                          className="flex h-8 w-8 items-center justify-center rounded-xl bg-red-500/10 text-red-500 transition-all hover:scale-110 hover:bg-red-500/20 disabled:opacity-50"
+                          title="Permanently Delete Account"
+                          aria-label="Permanently Delete Account"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       )}
                     </div>
