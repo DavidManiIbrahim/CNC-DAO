@@ -52,6 +52,10 @@ export default function DashboardOverviewPage() {
   ) ?? []
 
   const campaigns = useQuery(api.campaigns.list) ?? []
+  const contactMessages = useQuery(
+    api.messages.list,
+    isAdmin && user?.userId ? { adminId: user.userId as any } : "skip"
+  ) ?? []
 
   if (!user) return null
 
@@ -131,6 +135,15 @@ export default function DashboardOverviewPage() {
         title: "NFT Gallery",
         desc: "View minted proof-of-stewardship certificates",
         icon: "sparkles" as const,
+      },
+      {
+        href: "/dashboard/messages",
+        title: "Contact Inquiries",
+        desc: `${contactMessages.filter((m: any) => m.status === "unread").length} unread public inquiries`,
+        icon: "shield" as const,
+        badge: contactMessages.filter((m: any) => m.status === "unread").length > 0
+          ? `${contactMessages.filter((m: any) => m.status === "unread").length} Unread`
+          : undefined,
       },
     ]
 

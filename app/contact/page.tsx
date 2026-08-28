@@ -1,14 +1,52 @@
 "use client"
 
 import { useState } from "react"
+import { useMutation } from "convex/react"
+import { ConvexError } from "convex/values"
+import { api } from "@/convex/_generated/api"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { LiveStats } from "@/components/LiveStats"
-import { CheckCircle2, Mail, Send } from "lucide-react"
+import { CheckCircle2, Mail, Send, AlertCircle } from "lucide-react"
 
 export default function ContactPage() {
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [message, setMessage] = useState("")
   const [sent, setSent] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  const submitMessage = useMutation(api.messages.submit)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError("")
+    setLoading(true)
+
+    try {
+      await submitMessage({
+        name,
+        email,
+        message,
+      })
+      setSent(true)
+      setName("")
+      setEmail("")
+      setMessage("")
+    } catch (err: unknown) {
+      if (err instanceof ConvexError) {
+        setError(typeof err.data === "string" ? err.data : JSON.stringify(err.data))
+      } else if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError("Failed to send message. Please try again.")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <main className="bg-background text-foreground font-[family-name:var(--font-space-grotesk)]">
@@ -45,24 +83,26 @@ export default function ContactPage() {
                   <CheckCircle2 className="h-7 w-7" />
                 </div>
                 <h2 className="mb-2 font-[family-name:var(--font-syne)] text-2xl font-bold text-foreground">
-                  Message sent successfully
+                  Message Sent to Admins!
                 </h2>
                 <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                  Thank you for reaching out. A CNC DAO coordinator will get back to you shortly.
+                  Thank you for reaching out. Your message has been routed to CNC DAO system administrators and we'll reply to <span className="font-semibold text-foreground">{email || "your email"}</span> promptly.
                 </p>
+                <button
+                  onClick={() => setSent(false)}
+                  className="mt-6 rounded-full border border-border bg-muted px-6 py-2.5 text-xs font-semibold text-foreground hover:bg-muted/80"
+                >
+                  Send another message
+                </button>
               </div>
             ) : (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  setSent(true)
-                }}
-                className="flex flex-col gap-5"
-              >
+              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-foreground">Name</label>
                   <input
                     required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     placeholder="Your full name"
                     className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-[#1db954]/60"
                   />
@@ -72,6 +112,8 @@ export default function ContactPage() {
                   <input
                     type="email"
                     required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@domain.com"
                     className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-[#1db954]/60"
                   />
@@ -81,16 +123,27 @@ export default function ContactPage() {
                   <textarea
                     required
                     rows={5}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
                     placeholder="How can we collaborate? Tell us about your organization or question..."
                     className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-[#1db954]/60"
                   />
                 </div>
+
+                {error && (
+                  <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-400">
+                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  className="mt-2 flex items-center justify-center gap-2 rounded-full bg-[#1db954] px-6 py-3 text-sm font-bold text-black transition-transform duration-200 hover:scale-105"
+                  disabled={loading}
+                  className="mt-2 flex items-center justify-center gap-2 rounded-full bg-[#1db954] px-6 py-3 text-sm font-bold text-black transition-transform duration-200 hover:scale-105 disabled:opacity-50"
                 >
                   <Send className="h-4 w-4" />
-                  <span>Send Message</span>
+                  <span>{loading ? "Sending..." : "Send Message"}</span>
                 </button>
               </form>
             )}

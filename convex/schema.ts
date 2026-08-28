@@ -20,6 +20,12 @@ export const applicationStatuses = v.union(
   v.literal("rejected"),
 )
 
+export const messageStatuses = v.union(
+  v.literal("unread"),
+  v.literal("read"),
+  v.literal("resolved"),
+)
+
 export default defineSchema({
   users: defineTable({
     email: v.optional(v.string()),
@@ -73,4 +79,14 @@ export default defineSchema({
     joined: v.number(),
     createdAt: v.string(),
   }).index("by_createdAt", ["createdAt"]),
+
+  contactMessages: defineTable({
+    name: v.string(),
+    email: v.string(),
+    message: v.string(),
+    status: messageStatuses,
+    createdAt: v.string(),
+  })
+    .index("by_status", ["status"])
+    .index("by_createdAt", ["createdAt"]),
 })
