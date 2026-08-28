@@ -75,6 +75,8 @@ export const setApplicationStatus = mutation({
 
     if (args.status === "approved") {
       await ctx.db.patch(application.userId, { role: "nature_hero" })
+    } else if (args.status === "rejected") {
+      await ctx.db.patch(application.userId, { role: "user" })
     }
 
     return await ctx.db.get(args.applicationId)

@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useSessionUser } from "@/lib/useAuth"
 import { useMyTrees, useAllTrees } from "@/lib/useTrees"
+import { getTreeImage } from "@/lib/treePhotos"
 import { Sparkles, CheckCircle2, ShieldCheck, MapPin } from "lucide-react"
 
 export default function DashboardNFTPage() {
@@ -27,7 +28,7 @@ export default function DashboardNFTPage() {
             NFT Gallery & Proof of Stewardship
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Every verified tree on CNC DAO is minted as an immutable Solana NFT.
+            Every verified tree on CNC DAO is minted as an immutable Solana NFT certificate.
           </p>
         </div>
         <Link
@@ -80,7 +81,7 @@ export default function DashboardNFTPage() {
             </div>
             <p className="text-sm font-bold text-foreground">No NFTs minted yet</p>
             <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
-              Once your registered trees pass 2-of-2 Nature Hero verification, your proof-of-stewardship NFT can be minted directly to your wallet.
+              Once your registered trees pass Nature Hero verification, your proof-of-stewardship NFT can be minted directly to your wallet.
             </p>
             <Link
               href="/tree-reg"
@@ -93,37 +94,45 @@ export default function DashboardNFTPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {myNFTs.map((tree) => {
               const solanaMintHash = `CNC${tree.id.slice(-8).toUpperCase()}sol`
+              const treeImg = getTreeImage(tree.imageUrl, tree.species)
               return (
                 <div
                   key={tree.id}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#1db954]/50 hover:shadow-lg"
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#1db954]/50 hover:shadow-lg"
                 >
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-[family-name:var(--font-space-mono)] text-[10px] uppercase tracking-wider text-[#1db954] font-bold">
-                        Solana SPL Token
+                  <div className="relative h-44 w-full overflow-hidden border-b border-border bg-muted">
+                    <img
+                      src={treeImg}
+                      alt={tree.name}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute top-3 left-3">
+                      <span className="rounded-full bg-black/70 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#1db954] backdrop-blur-md">
+                        Solana SPL
                       </span>
+                    </div>
+                    <div className="absolute top-3 right-3">
                       <span
-                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                        className={`rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider backdrop-blur-md ${
                           tree.status === "minted"
-                            ? "bg-[#a78bfa]/15 text-[#a78bfa]"
-                            : "bg-[#1db954]/15 text-[#1db954]"
+                            ? "bg-[#a78bfa]/80 text-white"
+                            : "bg-[#1db954]/80 text-black font-bold"
                         }`}
                       >
                         {tree.status === "minted" ? "Minted" : "Verified"}
                       </span>
                     </div>
+                  </div>
 
-                    <div className="my-5 flex h-32 w-full items-center justify-center rounded-2xl bg-muted/60 border border-border">
-                      <div className="text-center p-4">
-                        <div className="font-[family-name:var(--font-syne)] text-lg font-bold text-foreground">
-                          {tree.species}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{tree.name}</div>
+                  <div className="p-5">
+                    <div className="mb-3">
+                      <div className="font-[family-name:var(--font-syne)] text-base font-bold text-foreground">
+                        {tree.name}
                       </div>
+                      <div className="text-xs text-muted-foreground">{tree.species}</div>
                     </div>
 
-                    <div className="space-y-2 text-xs">
+                    <div className="space-y-1.5 text-xs">
                       <div className="flex justify-between text-muted-foreground">
                         <span>Location</span>
                         <span className="font-semibold text-foreground">{tree.location}</span>
@@ -143,7 +152,7 @@ export default function DashboardNFTPage() {
                     </div>
                   </div>
 
-                  <div className="mt-6 border-t border-border pt-4">
+                  <div className="border-t border-border p-4 bg-muted/20">
                     <Link
                       href={`/dashboard/map?tree=${tree.id}`}
                       className="block text-center text-xs font-bold text-[#1db954] hover:underline"
@@ -173,8 +182,12 @@ export default function DashboardNFTPage() {
               className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-[#1db954]/30"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1db954]/15 text-[#1db954]">
-                  <Sparkles className="h-5 w-5" />
+                <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-border bg-muted">
+                  <img
+                    src={getTreeImage(t.imageUrl, t.species)}
+                    alt={t.name}
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <div>
                   <div className="text-sm font-bold text-foreground">{t.name}</div>
