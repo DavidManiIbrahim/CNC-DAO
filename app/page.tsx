@@ -182,7 +182,7 @@ const registryStats = [
 
 export default function Home() {
   return (
-    <main className="bg-[#0b0a12] text-white font-[family-name:var(--font-space-grotesk)]">
+    <main className="bg-background text-foreground font-[family-name:var(--font-space-grotesk)]">
       {/* ---------- Nav ---------- */}
       <Header />
 
@@ -282,7 +282,7 @@ export default function Home() {
             {steps.map((s, i) => (
               <div
                 key={s.n}
-                className="group rounded-xl border border-white/10 bg-[#08080f] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-[#0c0c15]"
+                className="group rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-[#0c0c15]"
               >
                 <StepIcon step={(i + 1) as 1 | 2 | 3 | 4 | 5 | 6} className="mb-4 h-12 w-12" />
                 <span className="mb-4 block font-[family-name:var(--font-space-mono)] text-xs font-bold text-[#f0a830]">
@@ -291,7 +291,7 @@ export default function Home() {
                 <h3 className="mb-2 font-[family-name:var(--font-syne)] text-xl font-bold tracking-[-0.02em]">
                   {s.title}
                 </h3>
-                <p className="text-sm text-white/60">{s.body}</p>
+                <p className="text-sm text-muted-foreground">{s.body}</p>
               </div>
             ))}
           </div>
@@ -339,7 +339,7 @@ export default function Home() {
                   <h3 className="mb-4 font-[family-name:var(--font-dm-sans)] text-[24px] font-medium tracking-[-0.02em] md:text-[40px]">
                     {block.heading}
                   </h3>
-                  <p className="text-white/60">{block.body}</p>
+                  <p className="text-muted-foreground">{block.body}</p>
                 </div>
                 <div className="group relative aspect-[4/3] flex-1 overflow-hidden rounded-xl bg-white/5">
                   <img src={block.image} alt={block.heading} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
@@ -367,12 +367,12 @@ export default function Home() {
             {features.map((f) => (
               <div
                 key={f.title}
-                className="group rounded-xl border border-white/5 bg-[#08080f] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#1db954]/40 hover:bg-[#0c0c15]"
+                className="group rounded-xl border border-white/5 bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#1db954]/40 hover:bg-[#0c0c15]"
               >
                 <h5 className="mb-2 font-[family-name:var(--font-dm-sans)] text-lg font-medium tracking-[-0.02em]">
                   {f.title}
                 </h5>
-                <p className="text-sm text-white/70">{f.body}</p>
+                <p className="text-sm text-muted-foreground">{f.body}</p>
               </div>
             ))}
           </div>
@@ -393,7 +393,7 @@ export default function Home() {
             {registryStats.map((s) => (
               <div
                 key={s.label}
-                className="rounded-xl border border-white/10 bg-gradient-to-br from-[#08080f] to-[#12121c] p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-white/20"
+                className="rounded-xl border border-border bg-gradient-to-br from-[#08080f] to-[#12121c] p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-white/20"
               >
                 <div className="font-[family-name:var(--font-space-mono)] text-2xl font-bold text-white">
                   {s.value}
@@ -458,7 +458,7 @@ export default function Home() {
               </p>
               <div className="relative z-10 text-sm">
                 <div className="font-bold">{t.name}</div>
-                <div className="text-white/70">{t.role}</div>
+                <div className="text-muted-foreground">{t.role}</div>
               </div>
             </div>
           ))}
@@ -513,7 +513,7 @@ export default function Home() {
           </Link>
 
           {/* Live registry map, ported from the site's real interactive widget */}
-          <div className="h-[600px] overflow-hidden rounded-2xl border border-white/10">
+          <div className="h-[600px] overflow-hidden rounded-2xl border border-border">
             <TreeMap />
           </div>
 
@@ -576,7 +576,7 @@ export default function Home() {
                   key={i}
                   className="h-[220px]"
                   front={
-                    <div className="flex h-[220px] items-center overflow-hidden rounded-2xl border border-white/10 bg-[#1b1b1e]">
+                    <div className="flex h-[220px] items-center overflow-hidden rounded-2xl border border-border bg-[#1b1b1e]">
                       <div className="flex h-full w-2/5 flex-shrink-0 items-center justify-center bg-gradient-to-br from-[#1db954]/25 via-[#0d0d0d] to-[#2d6a30]/40 text-[10px] text-white/30">
                         Art placeholder
                       </div>

@@ -3,6 +3,7 @@ import "./globals.css"
 import { SessionProvider } from "@/components/SessionProvider"
 import { ConvexClientProvider } from "@/providers/ConvexProvider"
 import { AutoLogout } from "@/components/AutoLogout"
+import { ThemeProvider } from "@/components/ThemeProvider"
 
 // DM Sans is the real primary heading font on the source site (hero H1, all
 // section H2s, feature card titles). Syne is reserved for a handful of large
@@ -10,7 +11,7 @@ import { AutoLogout } from "@/components/AutoLogout"
 const syne = Syne({ subsets: ["latin"], variable: "--font-syne", weight: ["600", "700", "800"] })
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", weight: ["400", "500", "700"] })
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" })
-const spaceMono = Space_Mono({ subsets: ["latin"], variable: "--font-space-mono", weight: ["700"] })
+const spaceMono = Space_Mono({ subsets: ["latin"], variable: "----font-space-mono", weight: ["700"] })
 
 export const metadata = {
   title: "CNC DAO",
@@ -23,16 +24,18 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${syne.variable} ${dmSans.variable} ${spaceGrotesk.variable} ${spaceMono.variable} antialiased`}
       >
-        <ConvexClientProvider>
-          <SessionProvider>
-            <AutoLogout />
-            {children}
-          </SessionProvider>
-        </ConvexClientProvider>
+        <ThemeProvider>
+          <ConvexClientProvider>
+            <SessionProvider>
+              <AutoLogout />
+              {children}
+            </SessionProvider>
+          </ConvexClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
