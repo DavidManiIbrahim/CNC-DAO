@@ -2,29 +2,23 @@
 
 import { useEffect, useRef } from "react"
 import landPointsRaw from "./land-points.json"
+import { useAllTrees } from "@/lib/useTrees"
 
 type LandPoint = { lng: number; lat: number }
 
-// Precomputed once via scripts/gen-land-points.mjs instead of running
-// d3-geo's geoContains against ~3000 grid points in the browser on every
-// page load — that synchronous computation, run twice (once per globe
-// instance on the page), was the main cause of the slow initial load.
 const landPoints: LandPoint[] = (landPointsRaw as [number, number][]).map(([lng, lat]) => ({
   lng,
   lat,
 }))
 
-// Yellow highlight dots — verified tree locations. Swap for real
-// coordinates once you have live data (lat, lng, label).
-const highlights: LandPoint[] = [
-  { lng: 3.4, lat: 6.5 }, // Lagos, Nigeria
-  { lng: 12.35, lat: 12.35 }, // N'Djamena area
-  { lng: -60, lat: -3 }, // Amazon region
-  { lng: -47, lat: -15 }, // Brazil
-]
-
 export default function DotGlobe({ className = "" }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const allTrees = useAllTrees()
+  const highlightsRef = useRef<LandPoint[]>([])
+
+  useEffect(() => {
+    highlightsRef.current = allTrees.map((t) => ({ lng: t.lng, lat: t.lat }))
+  }, [allTrees])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -53,7 +47,6 @@ export default function DotGlobe({ className = "" }: { className?: string }) {
     function project(lng: number, lat: number, rot: number, R: number, cx: number, cy: number) {
       const lambda = ((lng + rot) * Math.PI) / 180
       const phi = (lat * Math.PI) / 180
-      // simple orthographic projection
       const x = Math.cos(phi) * Math.sin(lambda)
       const y = Math.sin(phi)
       const z = Math.cos(phi) * Math.cos(lambda)
@@ -68,37 +61,47 @@ export default function DotGlobe({ className = "" }: { className?: string }) {
 
       rotation += 0.06
 
-      // outline ring — the glow comes from the stroke's own shadow blur,
-      // not a separate fill, so it can never show a hard rectangular edge
+      // Theme-aware rendering check
+      const isDark = document.documentElement.classList.contains("dark")
+
+      // Outline ring — Emerald/slate in light mode, crisp white in dark mode
       ctx!.beginPath()
       ctx!.arc(cx, cy, R, 0, Math.PI * 2)
-      ctx!.strokeStyle = "rgba(255,255,255,0.95)"
-      ctx!.lineWidth = 1.4
-      ctx!.shadowColor = "rgba(255,255,255,0.95)"
-      ctx!.shadowBlur = 22
+      ctx!.strokeStyle = isDark ? "rgba(255,255,255,0.92)" : "rgba(29, 185, 84, 0.8)"
+      ctx!.lineWidth = isDark ? 1.4 : 1.8
+      ctx!.shadowColor = isDark ? "rgba(255,255,255,0.92)" : "rgba(29, 185, 84, 0.6)"
+      ctx!.shadowBlur = isDark ? 22 : 14
       ctx!.stroke()
-      ctx!.stroke() // second pass deepens the glow without widening the line
+      ctx!.stroke()
       ctx!.shadowBlur = 0
 
-      // land dots
+      // Land dots
       for (const p of landPoints) {
         const { x, y, z, visible } = project(p.lng, p.lat, rotation, R, cx, cy)
         if (!visible) continue
-        const alpha = Math.max(0.08, z)
-        ctx!.fillStyle = `rgba(255,255,255,${alpha * 0.85})`
+        const alpha = Math.max(0.12, z)
+
+        ctx!.fillStyle = isDark
+          ? `rgba(255, 255, 255, ${alpha * 0.85})`
+          : `rgba(15, 23, 42, ${Math.max(0.25, alpha * 0.9)})`
+
         ctx!.beginPath()
-        ctx!.arc(x, y, 1.1, 0, Math.PI * 2)
+        ctx!.arc(x, y, isDark ? 1.1 : 1.25, 0, Math.PI * 2)
         ctx!.fill()
       }
 
-      // highlighted verification points (yellow)
-      for (const p of highlights) {
+      // Highlighted verification points
+      for (const p of highlightsRef.current) {
         const { x, y, z, visible } = project(p.lng, p.lat, rotation, R, cx, cy)
         if (!visible) continue
-        const alpha = Math.max(0.2, z)
+        const alpha = Math.max(0.3, z)
         const size = 4 + z * 3
-        ctx!.fillStyle = `rgba(216, 226, 55, ${alpha})`
-        ctx!.shadowColor = "rgba(216,226,55,0.9)"
+
+        ctx!.fillStyle = isDark
+          ? `rgba(216, 226, 55, ${alpha})`
+          : `rgba(234, 88, 12, ${alpha})`
+
+        ctx!.shadowColor = isDark ? "rgba(216, 226, 55, 0.9)" : "rgba(234, 88, 12, 0.9)"
         ctx!.shadowBlur = 10
         ctx!.beginPath()
         ctx!.arc(x, y, size, 0, Math.PI * 2)
