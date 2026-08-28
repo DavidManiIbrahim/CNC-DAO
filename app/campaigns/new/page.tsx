@@ -12,6 +12,7 @@ import { Reveal } from "@/components/Reveal"
 import { IconArrow } from "@/components/Icons"
 import { useSessionUser } from "@/lib/useAuth"
 import { resizeImage } from "@/lib/mockAuth"
+import { saveCampaignStoredImage } from "@/lib/campaignImages"
 import { Image as ImageIcon, Upload, X } from "lucide-react"
 
 export default function NewCampaignPage() {
@@ -66,14 +67,40 @@ export default function NewCampaignPage() {
         router.push("/connect-wallet")
         return
       }
-      await createCampaign({
-        creatorId: user.userId as any,
-        name: form.name,
-        region: form.region,
-        participantLimit: parseInt(form.participantLimit, 10) || 1,
-        description: form.description,
-        imageUrl: imagePreview || undefined,
-      })
+
+      if (imagePreview) {
+        saveCampaignStoredImage(form.name, imagePreview)
+      }
+
+      try {
+        await createCampaign({
+          creatorId: user.userId as any,
+          name: form.name,
+          region: form.region,
+          participantLimit: parseInt(form.participantLimit, 10) || 1,
+          description: form.description,
+          imageUrl: imagePreview || undefined,
+        })
+      } catch (createErr: any) {
+        const errMsg = createErr?.message || String(createErr)
+        if (
+          errMsg.includes("ArgumentValidationError") ||
+          errMsg.includes("extra field `imageUrl`") ||
+          errMsg.includes("extra field")
+        ) {
+          // Fallback: Retry without imageUrl for remote validator compatibility
+          await createCampaign({
+            creatorId: user.userId as any,
+            name: form.name,
+            region: form.region,
+            participantLimit: parseInt(form.participantLimit, 10) || 1,
+            description: form.description,
+          } as any)
+        } else {
+          throw createErr
+        }
+      }
+
       router.push("/campaigns")
     } catch (err: unknown) {
       if (err instanceof ConvexError) {

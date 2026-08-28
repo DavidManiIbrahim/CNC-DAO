@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api"
 import { ConvexError } from "convex/values"
 import { useSessionUser } from "@/lib/useAuth"
 import { resizeImage } from "@/lib/mockAuth"
+import { saveCampaignStoredImage, getCampaignImage } from "@/lib/campaignImages"
 import {
   Plus,
   Trash2,
@@ -110,21 +111,40 @@ export default function DashboardCampaignsPage() {
         throw new Error("You must be logged in to manage campaigns.")
       }
 
+      if (imagePreview) {
+        saveCampaignStoredImage(form.name, imagePreview)
+      }
+
+      const payloadWithImg = {
+        name: form.name,
+        region: form.region,
+        participantLimit: parseInt(form.participantLimit, 10) || 10,
+        description: form.description,
+        imageUrl: imagePreview || undefined,
+      }
+
+      const payloadWithoutImg = {
+        name: form.name,
+        region: form.region,
+        participantLimit: parseInt(form.participantLimit, 10) || 10,
+        description: form.description,
+      }
+
       if (editingCampaign) {
         try {
           await updateMutation({
             adminId: user.userId as any,
             campaignId: editingCampaign._id as any,
-            name: form.name,
-            region: form.region,
-            participantLimit: parseInt(form.participantLimit, 10) || 10,
-            description: form.description,
-            imageUrl: imagePreview || undefined,
+            ...payloadWithImg,
           })
         } catch (updateErr: any) {
           const errMsg = updateErr?.message || String(updateErr)
-          if (errMsg.includes("Could not find public function")) {
-            // Fallback for when campaigns:update is still syncing on remote Convex
+          if (
+            errMsg.includes("Could not find public function") ||
+            errMsg.includes("extra field") ||
+            errMsg.includes("ArgumentValidationError")
+          ) {
+            // Fallback for when campaigns:update or imageUrl is still syncing on remote Convex
             try {
               await removeMutation({
                 adminId: user.userId as any,
@@ -133,27 +153,42 @@ export default function DashboardCampaignsPage() {
             } catch {
               // Ignore remove error if already handled
             }
-            await createMutation({
-              creatorId: user.userId as any,
-              name: form.name,
-              region: form.region,
-              participantLimit: parseInt(form.participantLimit, 10) || 10,
-              description: form.description,
-              imageUrl: imagePreview || undefined,
-            })
+
+            try {
+              await createMutation({
+                creatorId: user.userId as any,
+                ...payloadWithImg,
+              })
+            } catch (createErr: any) {
+              await createMutation({
+                creatorId: user.userId as any,
+                ...payloadWithoutImg,
+              } as any)
+            }
           } else {
             throw updateErr
           }
         }
       } else {
-        await createMutation({
-          creatorId: user.userId as any,
-          name: form.name,
-          region: form.region,
-          participantLimit: parseInt(form.participantLimit, 10) || 10,
-          description: form.description,
-          imageUrl: imagePreview || undefined,
-        })
+        try {
+          await createMutation({
+            creatorId: user.userId as any,
+            ...payloadWithImg,
+          })
+        } catch (createErr: any) {
+          const errMsg = createErr?.message || String(createErr)
+          if (
+            errMsg.includes("extra field") ||
+            errMsg.includes("ArgumentValidationError")
+          ) {
+            await createMutation({
+              creatorId: user.userId as any,
+              ...payloadWithoutImg,
+            } as any)
+          } else {
+            throw createErr
+          }
+        }
       }
 
       setShowModal(false)
@@ -271,16 +306,17 @@ export default function DashboardCampaignsPage() {
             const pct = Math.min(100, Math.round((c.joined / c.participantLimit) * 100))
             const isJoined = joinedMap[c._id]
             const isFull = c.joined >= c.participantLimit
+            const cImg = getCampaignImage(c.imageUrl, c.name)
 
             return (
               <div
                 key={c._id}
                 className="flex flex-col justify-between overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all hover:border-[#1db954]/40 hover:shadow-md"
               >
-                {c.imageUrl && (
+                {cImg && (
                   <div className="relative h-44 w-full overflow-hidden border-b border-border bg-muted">
                     <img
-                      src={c.imageUrl}
+                      src={cImg}
                       alt={c.name}
                       className="h-full w-full object-cover"
                     />
@@ -296,7 +332,7 @@ export default function DashboardCampaignsPage() {
                       <h2 className="font-[family-name:var(--font-syne)] text-lg font-bold text-foreground">
                         {c.name}
                       </h2>
-                      {!c.imageUrl && (
+                      {!cImg && (
                         <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                           <MapPin className="h-3 w-3 text-[#1db954]" />
                           <span>{c.region}</span>

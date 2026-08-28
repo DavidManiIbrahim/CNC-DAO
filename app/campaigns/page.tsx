@@ -9,7 +9,8 @@ import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { IconArrow } from "@/components/Icons"
 import { useSessionUser } from "@/lib/useAuth"
-import { Trash2, Edit2, Users, Check, Sparkles, MapPin } from "lucide-react"
+import { getCampaignImage } from "@/lib/campaignImages"
+import { Sparkles, Users, Check, MapPin, Edit2, Trash2, ArrowRight } from "lucide-react"
 
 export default function CampaignsPage() {
   const user = useSessionUser()
@@ -100,16 +101,17 @@ export default function CampaignsPage() {
               const pct = Math.min(100, Math.round((c.joined / c.participantLimit) * 100))
               const isJoined = joinedMap[c._id]
               const isFull = c.joined >= c.participantLimit
+              const cImg = getCampaignImage(c.imageUrl, c.name)
 
               return (
                 <div
                   key={c._id}
                   className="relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#1db954]/40 hover:shadow-md"
                 >
-                  {c.imageUrl && (
+                  {cImg && (
                     <div className="relative h-44 w-full overflow-hidden border-b border-border bg-muted">
                       <img
-                        src={c.imageUrl}
+                        src={cImg}
                         alt={c.name}
                         className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                       />
@@ -125,7 +127,7 @@ export default function CampaignsPage() {
                         <h3 className="mb-1 font-[family-name:var(--font-syne)] text-lg font-bold text-foreground">
                           {c.name}
                         </h3>
-                        {!c.imageUrl && (
+                        {!cImg && (
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <MapPin className="h-3 w-3 text-[#1db954]" />
                             <span>{c.region}</span>
