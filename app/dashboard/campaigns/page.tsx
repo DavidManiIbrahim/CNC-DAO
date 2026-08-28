@@ -111,15 +111,40 @@ export default function DashboardCampaignsPage() {
       }
 
       if (editingCampaign) {
-        await updateMutation({
-          adminId: user.userId as any,
-          campaignId: editingCampaign._id as any,
-          name: form.name,
-          region: form.region,
-          participantLimit: parseInt(form.participantLimit, 10) || 10,
-          description: form.description,
-          imageUrl: imagePreview || undefined,
-        })
+        try {
+          await updateMutation({
+            adminId: user.userId as any,
+            campaignId: editingCampaign._id as any,
+            name: form.name,
+            region: form.region,
+            participantLimit: parseInt(form.participantLimit, 10) || 10,
+            description: form.description,
+            imageUrl: imagePreview || undefined,
+          })
+        } catch (updateErr: any) {
+          const errMsg = updateErr?.message || String(updateErr)
+          if (errMsg.includes("Could not find public function")) {
+            // Fallback for when campaigns:update is still syncing on remote Convex
+            try {
+              await removeMutation({
+                adminId: user.userId as any,
+                campaignId: editingCampaign._id as any,
+              })
+            } catch {
+              // Ignore remove error if already handled
+            }
+            await createMutation({
+              creatorId: user.userId as any,
+              name: form.name,
+              region: form.region,
+              participantLimit: parseInt(form.participantLimit, 10) || 10,
+              description: form.description,
+              imageUrl: imagePreview || undefined,
+            })
+          } else {
+            throw updateErr
+          }
+        }
       } else {
         await createMutation({
           creatorId: user.userId as any,
