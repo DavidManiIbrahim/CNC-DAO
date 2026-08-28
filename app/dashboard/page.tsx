@@ -23,6 +23,7 @@ export default function DashboardOverviewPage() {
   ]
 
   const quickLinks = [
+    { href: "/dashboard/campaigns", title: "Planting Campaigns", desc: "Join & coordinate planting drives", icon: "leaf" as const },
     { href: "/dashboard/profile", title: "Edit Profile", desc: "Photo, display name, bio", icon: "leaf" as const },
     { href: "/dashboard/badges", title: "View Badges", desc: "Your earned achievements", icon: "star" as const },
     { href: "/dashboard/nft", title: "NFT Gallery", desc: "Proof-of-stewardship NFTs", icon: "sparkles" as const },

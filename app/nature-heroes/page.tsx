@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
@@ -67,9 +68,12 @@ export default function NatureHeroesPage() {
               Applications open on a regional basis as the network grows. Connect
               your wallet to register interest for your area.
             </p>
-            <button className="rounded-full bg-[#1db954] px-6 py-3 text-sm font-medium transition-transform duration-200 hover:scale-105">
-              Connect Wallet to Apply
-            </button>
+            <Link
+              href="/nature-heroes/apply"
+              className="inline-block rounded-full bg-[#1db954] px-6 py-3 text-sm font-medium transition-transform duration-200 hover:scale-105"
+            >
+              Apply to Become a Nature Hero
+            </Link>
           </div>
         </Reveal>
       </section>

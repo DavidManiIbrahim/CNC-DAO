@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useCallback } from "react"
+import Link from "next/link"
 import { latLngToXY, type RegisteredTree } from "@/lib/registeredTrees"
 import { useAllTrees } from "@/lib/useTrees"
 
@@ -62,7 +63,9 @@ export default function TreeMap() {
   })
 
   const filteredTrees = trees.filter((t) => {
-    if (activeFilter !== "all" && activeFilter !== "nigeria" && t.status !== activeFilter) return false
+    if (activeFilter === "pending" && t.status !== "pending") return false
+    if (activeFilter === "verified" && t.status !== "verified" && t.status !== "minted") return false
+    if (activeFilter === "minted" && t.status !== "minted") return false
     if (activeFilter === "nigeria" && t.country !== "Nigeria") return false
     if (search && !t.name.toLowerCase().includes(search.toLowerCase()) && !t.location.toLowerCase().includes(search.toLowerCase())) return false
     return true
@@ -70,7 +73,7 @@ export default function TreeMap() {
 
   const counts = {
     total: trees.length,
-    verified: trees.filter((t) => t.status === "verified").length,
+    verified: trees.filter((t) => t.status === "verified" || t.status === "minted").length,
     minted: trees.filter((t) => t.status === "minted").length,
     pending: trees.filter((t) => t.status === "pending").length,
   }
@@ -137,9 +140,9 @@ export default function TreeMap() {
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#22c55e]" />
             1,240 live
           </div>
-          <button className="rounded-lg bg-[#f5a800] px-4 py-1.5 text-[11px] font-bold text-[#0a0a0a]">
+          <Link href="/tree-reg" className="rounded-lg bg-[#f5a800] px-4 py-1.5 text-[11px] font-bold text-[#0a0a0a] transition-transform hover:scale-105">
             + Plant a tree
-          </button>
+          </Link>
         </div>
       </div>
 

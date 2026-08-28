@@ -54,7 +54,9 @@ export default function AdminGlobalMap() {
   // Filtered list
   const filteredTrees = useMemo(() => {
     return dbTrees.filter((t: any) => {
-      if (activeFilter !== "all" && t.status !== activeFilter) return false
+      if (activeFilter === "pending" && t.status !== "pending") return false
+      if (activeFilter === "verified" && t.status !== "verified" && t.status !== "minted") return false
+      if (activeFilter === "minted" && t.status !== "minted") return false
       if (search.trim()) {
         const q = search.toLowerCase()
         const matchName = t.name?.toLowerCase().includes(q)
@@ -71,7 +73,7 @@ export default function AdminGlobalMap() {
   const counts = {
     total: dbTrees.length,
     pending: dbTrees.filter((t: any) => t.status === "pending").length,
-    verified: dbTrees.filter((t: any) => t.status === "verified").length,
+    verified: dbTrees.filter((t: any) => t.status === "verified" || t.status === "minted").length,
     minted: dbTrees.filter((t: any) => t.status === "minted").length,
   }
 

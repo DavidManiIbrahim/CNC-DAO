@@ -35,7 +35,7 @@ export default function TreeVerificationPage() {
     return sourceTrees.filter((t: any) => {
       // Tab filter
       if (activeTab === "pending" && t.status !== "pending") return false
-      if (activeTab === "verified" && t.status !== "verified") return false
+      if (activeTab === "verified" && t.status !== "verified" && t.status !== "minted") return false
       if (activeTab === "minted" && t.status !== "minted") return false
       if (activeTab === "mine" && t.walletAddress !== user?.walletAddress) return false
 
@@ -55,7 +55,7 @@ export default function TreeVerificationPage() {
 
   // Count stats
   const pendingCount = sourceTrees.filter((t: any) => t.status === "pending").length
-  const verifiedCount = sourceTrees.filter((t: any) => t.status === "verified").length
+  const verifiedCount = sourceTrees.filter((t: any) => t.status === "verified" || t.status === "minted").length
   const mintedCount = sourceTrees.filter((t: any) => t.status === "minted").length
   const mineCount = sourceTrees.filter((t: any) => t.walletAddress === user?.walletAddress).length
 

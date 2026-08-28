@@ -1,4 +1,4 @@
-import { v } from "convex/values"
+import { v, ConvexError } from "convex/values"
 import { mutation, query } from "./_generated/server"
 
 export const create = mutation({
@@ -12,7 +12,7 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const creator = await ctx.db.get(args.creatorId)
     if (!creator || (creator.role !== "nature_hero" && creator.role !== "admin")) {
-      throw new Error("Only approved Nature Heroes can create campaigns")
+      throw new ConvexError("Only approved Nature Heroes and Admins can create campaigns")
     }
 
     const id = await ctx.db.insert("campaigns", {
@@ -27,6 +27,38 @@ export const create = mutation({
       createdAt: new Date().toISOString(),
     })
     return await ctx.db.get(id)
+  },
+})
+
+export const join = mutation({
+  args: {
+    campaignId: v.id("campaigns"),
+  },
+  handler: async (ctx, args) => {
+    const campaign = await ctx.db.get(args.campaignId)
+    if (!campaign) throw new ConvexError("Campaign not found")
+    if (campaign.joined >= campaign.participantLimit) {
+      throw new ConvexError("This campaign is already full")
+    }
+    await ctx.db.patch(args.campaignId, {
+      joined: campaign.joined + 1,
+    })
+    return await ctx.db.get(args.campaignId)
+  },
+})
+
+export const remove = mutation({
+  args: {
+    adminId: v.id("users"),
+    campaignId: v.id("campaigns"),
+  },
+  handler: async (ctx, args) => {
+    const admin = await ctx.db.get(args.adminId)
+    if (!admin || admin.role !== "admin") {
+      throw new ConvexError("Only Admins can delete campaigns")
+    }
+    await ctx.db.delete(args.campaignId)
+    return { success: true }
   },
 })
 

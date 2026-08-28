@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMutation } from "convex/react"
+import { ConvexError } from "convex/values"
 import { api } from "@/convex/_generated/api"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
@@ -42,8 +43,14 @@ export default function NewCampaignPage() {
         description: form.description,
       })
       router.push("/campaigns")
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong")
+    } catch (err: unknown) {
+      if (err instanceof ConvexError) {
+        setError(typeof err.data === "string" ? err.data : JSON.stringify(err.data))
+      } else if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError("Failed to create campaign. Please try again.")
+      }
     } finally {
       setLoading(false)
     }
@@ -62,15 +69,14 @@ export default function NewCampaignPage() {
             {!allowed ? (
               <div className="rounded-2xl border border-white/10 bg-[#08080f] p-10 text-center">
                 <h1 className="mb-2 font-[family-name:var(--font-syne)] text-xl font-bold">
-                  Nature Heroes only
+                  Nature Heroes & Admins Only
                 </h1>
                 <p className="mb-6 text-sm text-white/60">
-                  Only approved Nature Heroes can create campaigns, since they're
-                  responsible for validating the trees planted under them.
+                  Only approved Nature Heroes and System Admins can create planting campaigns.
                 </p>
                 <Link
                   href="/nature-heroes/apply"
-                  className="inline-block rounded-full bg-[#1db954] px-6 py-3 text-sm font-medium"
+                  className="inline-block rounded-full bg-[#1db954] px-6 py-3 text-sm font-medium text-black"
                 >
                   Apply to become a Nature Hero
                 </Link>
