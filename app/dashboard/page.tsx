@@ -54,7 +54,7 @@ export default function DashboardOverviewPage() {
   const campaigns = useQuery(api.campaigns.list) ?? []
   const contactMessages = useQuery(
     api.messages.list,
-    isAdmin && user?.userId ? { adminId: user.userId as any } : "skip"
+    isAdmin ? {} : "skip"
   ) ?? []
 
   if (!user) return null

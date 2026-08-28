@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { useSessionUser } from "@/lib/useAuth"
+import { ConvexErrorBoundary } from "@/components/ConvexErrorBoundary"
 import {
   Mail,
   MailOpen,
@@ -16,7 +17,7 @@ import {
   Eye,
 } from "lucide-react"
 
-export default function AdminMessagesPage() {
+function AdminMessagesContent() {
   const user = useSessionUser()
   const isAdmin = user?.role === "admin"
   const adminId = user?.userId
@@ -476,5 +477,13 @@ export default function AdminMessagesPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function AdminMessagesPage() {
+  return (
+    <ConvexErrorBoundary>
+      <AdminMessagesContent />
+    </ConvexErrorBoundary>
   )
 }
