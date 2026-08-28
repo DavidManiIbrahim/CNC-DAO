@@ -153,44 +153,68 @@ function initialsOf(name: string) {
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const user = useSessionUser()
-  const { data: googleSession } = useSession()
+  const { data: googleSession, status: googleStatus } = useSession()
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const connectWallet = useMutation(api.users.connectWallet)
   const linkingRef = useRef(false)
 
-  // Auto-logout: if the user lands on the dashboard without any session
-  // (no mock user AND no Google session), redirect home.
+  // Auto-logout: only redirect home if we are certain the user is unauthenticated
+  // and NextAuth has finished checking its session.
   useEffect(() => {
-    if (user === null) {
+    if (googleStatus === "loading") return
+    if (user === null && !googleSession?.user) {
       router.replace("/")
     }
-  }, [user, router])
+  }, [user, googleSession, googleStatus, router])
 
   // Google sign-ins: create a Convex user lazily so Convex-backed features
   // work for them too, then mirror it into the localStorage session cache.
   useEffect(() => {
-    if (!user || user.userId || !googleSession?.user) return
+    if (!googleSession?.user) return
+    const walletAddress = `google:${googleSession.user.email ?? "user"}`
+    if (user?.userId && !user.userId.startsWith("google-") && user.walletAddress === walletAddress) return
     if (linkingRef.current) return
     linkingRef.current = true
-    const walletAddress = `google:${googleSession.user.email ?? "user"}`
     connectWallet({ walletAddress })
       .then((convexUser) => {
         setMockUser({
           userId: convexUser._id,
           walletAddress,
           role: convexUser.role as UserRole,
-          displayName: convexUser.displayName ?? convexUser.name ?? undefined,
+          displayName: convexUser.displayName ?? convexUser.name ?? googleSession.user?.name ?? undefined,
           bio: convexUser.bio ?? undefined,
           avatar: convexUser.avatar ?? googleSession.user?.image ?? undefined,
           joinedAt: convexUser.joinedAt,
+        })
+      })
+      .catch(() => {
+        // Fallback: save local session so user remains authenticated
+        setMockUser({
+          userId: `google-${googleSession.user?.email ?? "user"}`,
+          walletAddress,
+          role: "user",
+          displayName: googleSession.user?.name ?? undefined,
+          avatar: googleSession.user?.image ?? undefined,
+          joinedAt: new Date().toISOString(),
         })
       })
       .finally(() => {
         linkingRef.current = false
       })
   }, [user, googleSession, connectWallet])
+
+  if (googleStatus === "loading" || (!user && googleSession?.user)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#1db954] border-t-transparent" />
+          <span className="text-xs font-semibold text-muted-foreground">Authenticating session…</span>
+        </div>
+      </div>
+    )
+  }
 
   if (user === undefined || user === null) return null
 

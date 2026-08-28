@@ -31,35 +31,28 @@ function normalizeAddress(addr?: string | null): string {
 
 /**
  * All trees for the public registry/maps. Sources the Convex `trees` table
- * and falls back to the local seed trees + localStorage submissions while
- * the DB is loading, empty, or unreachable so the maps never appear blank.
+ * and returns the exact live database count.
  */
 export function useAllTrees(): RegisteredTree[] {
   const dbTrees = useQuery(api.trees.listAll)
-  const [localTrees, setLocalTrees] = useState<RegisteredTree[]>(() => getAllTrees())
+  const [localTrees, setLocalTrees] = useState<RegisteredTree[]>(() => getUserTrees())
 
   useEffect(() => {
-    const refresh = () => setLocalTrees(getAllTrees())
+    const refresh = () => setLocalTrees(getUserTrees())
     refresh()
     window.addEventListener("trees:change", refresh)
     return () => window.removeEventListener("trees:change", refresh)
   }, [])
 
-  if (dbTrees === undefined) return localTrees
-  if (dbTrees.length > 0) {
-    const dbMapped = dbTrees.map(toRegisteredTree)
-    // Combine with any local trees that aren't yet in db
-    const existingIds = new Set(dbMapped.map((t) => t.id))
-    const uniqueLocal = localTrees.filter((t) => !existingIds.has(t.id))
-    return [...dbMapped, ...uniqueLocal]
+  if (dbTrees !== undefined) {
+    return dbTrees.map(toRegisteredTree)
   }
   return localTrees
 }
 
 /**
  * The signed-in user's own trees. Reads the Convex `trees` table by wallet
- * address, falling back to localStorage submissions when the DB is empty or
- * unavailable.
+ * address, with normalized identity matching.
  */
 export function useMyTrees(walletAddress?: string | null): RegisteredTree[] {
   const allDbTrees = useQuery(api.trees.listAll)
@@ -74,10 +67,9 @@ export function useMyTrees(walletAddress?: string | null): RegisteredTree[] {
 
   const normalizedUser = normalizeAddress(walletAddress)
 
-  // If DB trees are available, find trees matching user address
-  if (allDbTrees && allDbTrees.length > 0) {
-    const matchedDb = allDbTrees.filter((t) => {
-      if (!walletAddress && !normalizedUser) return false
+  if (allDbTrees !== undefined) {
+    if (!walletAddress && !normalizedUser) return []
+    return allDbTrees.filter((t) => {
       const tNorm = normalizeAddress(t.walletAddress)
       return (
         t.walletAddress === walletAddress ||
@@ -85,12 +77,6 @@ export function useMyTrees(walletAddress?: string | null): RegisteredTree[] {
         (normalizedUser.length > 0 && (tNorm.includes(normalizedUser) || normalizedUser.includes(tNorm)))
       )
     }).map(toRegisteredTree)
-
-    if (matchedDb.length > 0) {
-      const dbIds = new Set(matchedDb.map((t) => t.id))
-      const uniqueLocal = localTrees.filter((t) => !dbIds.has(t.id))
-      return [...matchedDb, ...uniqueLocal]
-    }
   }
 
   return localTrees

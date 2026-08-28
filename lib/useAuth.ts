@@ -11,7 +11,7 @@ import { getMockUser, type MockUser } from "@/lib/mockAuth"
  * (next-auth) or a session pointer in localStorage.
  */
 export function useIsAuthenticated() {
-  const { data: googleSession } = useSession()
+  const { data: googleSession, status } = useSession()
   const [user, setUser] = useState<MockUser | null>(() => getMockUser())
 
   useEffect(() => {
@@ -21,7 +21,8 @@ export function useIsAuthenticated() {
     return () => window.removeEventListener("mockuser:change", handler)
   }, [])
 
-  return Boolean(googleSession || user)
+  if (status === "loading") return true // prevent flickering redirects during initial check
+  return Boolean(googleSession?.user || user)
 }
 
 /**
@@ -40,7 +41,9 @@ export function useSessionUser(): MockUser | null {
   const sessionUserId = user?.userId
   const dbUser = useQuery(
     api.users.get,
-    sessionUserId ? { userId: sessionUserId as any } : "skip",
+    sessionUserId && !sessionUserId.startsWith("google-")
+      ? { userId: sessionUserId as any }
+      : "skip",
   )
 
   useEffect(() => {
@@ -57,7 +60,7 @@ export function useSessionUser(): MockUser | null {
       role: dbUser.role as MockUser["role"],
       displayName: dbUser.displayName ?? dbUser.name ?? undefined,
       bio: dbUser.bio ?? undefined,
-      avatar: dbUser.avatar ?? undefined,
+      avatar: dbUser.avatar ?? user.avatar ?? undefined,
       joinedAt: dbUser.joinedAt,
     }
   }
@@ -65,10 +68,12 @@ export function useSessionUser(): MockUser | null {
   if (user) return user
 
   if (googleSession?.user) {
+    const email = googleSession.user.email ?? "user"
     return {
-      walletAddress: `google:${googleSession.user.email ?? "user"}`,
+      userId: `google-${email}`,
+      walletAddress: `google:${email}`,
       role: "user",
-      displayName: googleSession.user.name ?? undefined,
+      displayName: googleSession.user.name ?? email.split("@")[0],
       avatar: googleSession.user.image ?? undefined,
       joinedAt: new Date().toISOString(),
     }
