@@ -14,9 +14,6 @@ import {
   Search,
   Shield,
   Eye,
-  MessageSquare,
-  AlertCircle,
-  Send,
 } from "lucide-react"
 
 export default function AdminMessagesPage() {
@@ -24,10 +21,7 @@ export default function AdminMessagesPage() {
   const isAdmin = user?.role === "admin"
   const adminId = user?.userId
 
-  const messages = useQuery(
-    api.messages.list,
-    adminId ? { adminId: adminId as any } : "skip"
-  ) ?? []
+  const messages = useQuery(api.messages.list, {}) ?? []
 
   const updateStatus = useMutation(api.messages.updateStatus)
   const removeMessage = useMutation(api.messages.remove)
@@ -37,15 +31,35 @@ export default function AdminMessagesPage() {
   const [selectedMessage, setSelectedMessage] = useState<any | null>(null)
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
 
+  // Safe formatting helpers
+  function formatDate(d?: string) {
+    if (!d) return "—"
+    try {
+      return new Date(d).toLocaleDateString()
+    } catch {
+      return "—"
+    }
+  }
+
+  function formatDateTime(d?: string) {
+    if (!d) return "—"
+    try {
+      return new Date(d).toLocaleString()
+    } catch {
+      return "—"
+    }
+  }
+
   // Filter messages
   const filteredMessages = useMemo(() => {
-    return messages.filter((m: any) => {
+    return (messages || []).filter((m: any) => {
+      if (!m) return false
       if (activeTab !== "all" && m.status !== activeTab) return false
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
-        const matchName = m.name?.toLowerCase().includes(q)
-        const matchEmail = m.email?.toLowerCase().includes(q)
-        const matchBody = m.message?.toLowerCase().includes(q)
+        const matchName = m.name ? String(m.name).toLowerCase().includes(q) : false
+        const matchEmail = m.email ? String(m.email).toLowerCase().includes(q) : false
+        const matchBody = m.message ? String(m.message).toLowerCase().includes(q) : false
         return matchName || matchEmail || matchBody
       }
       return true
@@ -54,18 +68,17 @@ export default function AdminMessagesPage() {
 
   // Stats
   const counts = {
-    total: messages.length,
-    unread: messages.filter((m: any) => m.status === "unread").length,
-    read: messages.filter((m: any) => m.status === "read").length,
-    resolved: messages.filter((m: any) => m.status === "resolved").length,
+    total: (messages || []).length,
+    unread: (messages || []).filter((m: any) => m?.status === "unread").length,
+    read: (messages || []).filter((m: any) => m?.status === "read").length,
+    resolved: (messages || []).filter((m: any) => m?.status === "resolved").length,
   }
 
   async function handleStatusChange(messageId: string, status: "unread" | "read" | "resolved") {
-    if (!adminId || !isAdmin) return
     setActionLoadingId(messageId)
     try {
       await updateStatus({
-        adminId: adminId as any,
+        adminId: adminId ? String(adminId) : undefined,
         messageId: messageId as any,
         status,
       })
@@ -80,12 +93,11 @@ export default function AdminMessagesPage() {
   }
 
   async function handleDelete(messageId: string) {
-    if (!adminId || !isAdmin) return
     if (!confirm("Are you sure you want to permanently delete this inquiry?")) return
     setActionLoadingId(messageId)
     try {
       await removeMessage({
-        adminId: adminId as any,
+        adminId: adminId ? String(adminId) : undefined,
         messageId: messageId as any,
       })
       if (selectedMessage && selectedMessage._id === messageId) {
@@ -99,6 +111,7 @@ export default function AdminMessagesPage() {
   }
 
   function handleOpenMessage(m: any) {
+    if (!m) return
     setSelectedMessage(m)
     if (m.status === "unread") {
       handleStatusChange(m._id, "read")
@@ -258,10 +271,12 @@ export default function AdminMessagesPage() {
             </div>
           ) : (
             filteredMessages.map((m: any) => {
+              if (!m) return null
               const isUnread = m.status === "unread"
               const isResolved = m.status === "resolved"
-              const dateStr = m.createdAt ? new Date(m.createdAt).toLocaleDateString() : "—"
+              const dateStr = formatDate(m.createdAt)
               const isLoading = actionLoadingId === m._id
+              const initials = m.name ? String(m.name).slice(0, 2).toUpperCase() : "??"
 
               return (
                 <div
@@ -282,12 +297,12 @@ export default function AdminMessagesPage() {
                             : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      {m.name ? m.name.slice(0, 2).toUpperCase() : "??"}
+                      {initials}
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className={`truncate text-sm ${isUnread ? "font-bold text-foreground" : "font-medium text-foreground"}`}>
-                          {m.name}
+                          {m.name || "Anonymous"}
                         </span>
                         {isUnread && (
                           <span className="h-2 w-2 rounded-full bg-[#f0a830]" />
@@ -300,7 +315,7 @@ export default function AdminMessagesPage() {
                   <div className="min-w-0">
                     <div className="text-[11px] font-medium text-muted-foreground md:hidden">Email:</div>
                     <span className="truncate text-xs font-mono text-muted-foreground hover:text-foreground">
-                      {m.email}
+                      {m.email || "—"}
                     </span>
                   </div>
 
@@ -308,7 +323,7 @@ export default function AdminMessagesPage() {
                   <div className="min-w-0">
                     <div className="text-[11px] font-medium text-muted-foreground md:hidden">Message:</div>
                     <p className="truncate text-xs text-muted-foreground">
-                      {m.message}
+                      {m.message || "—"}
                     </p>
                   </div>
 
@@ -324,7 +339,7 @@ export default function AdminMessagesPage() {
                             : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      {m.status}
+                      {m.status || "unread"}
                     </span>
                   </div>
 
@@ -342,7 +357,7 @@ export default function AdminMessagesPage() {
                     </button>
 
                     <a
-                      href={`mailto:${m.email}?subject=Reply from CNC DAO Coordinator&body=Hi ${m.name},%0D%0A%0D%0AThank you for reaching out to CNC DAO regarding:%0D%0A"${m.message.slice(0, 100)}..."%0D%0A%0D%0A`}
+                      href={`mailto:${m.email || ""}?subject=Reply from CNC DAO Coordinator&body=Hi ${m.name || ""},%0D%0A%0D%0AThank you for reaching out to CNC DAO regarding your inquiry.%0D%0A%0D%0A`}
                       className="rounded-xl p-2 text-[#1db954] transition-colors hover:bg-[#1db954]/10"
                       title="Reply via Email"
                     >
@@ -393,7 +408,7 @@ export default function AdminMessagesPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="font-[family-name:var(--font-syne)] text-lg font-bold text-foreground">
-                    {selectedMessage.name}
+                    {selectedMessage.name || "Anonymous"}
                   </h2>
                   <span
                     className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
@@ -433,7 +448,7 @@ export default function AdminMessagesPage() {
             </div>
 
             <div className="mb-4 text-[11px] text-muted-foreground">
-              Received: {selectedMessage.createdAt ? new Date(selectedMessage.createdAt).toLocaleString() : "—"}
+              Received: {formatDateTime(selectedMessage.createdAt)}
             </div>
 
             <div className="flex items-center justify-between border-t border-border pt-4">
