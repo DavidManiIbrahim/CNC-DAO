@@ -3,6 +3,7 @@ import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { IconCheck } from "@/components/Icons"
+import { LiveStats } from "@/components/LiveStats"
 
 const responsibilities = [
   {
@@ -24,7 +25,7 @@ export default function NatureHeroesPage() {
     <main className="bg-background text-foreground font-[family-name:var(--font-space-grotesk)]">
       <Header />
 
-      <section className="px-6 pb-16 pt-20 text-center md:px-16 md:pt-28">
+      <section className="px-6 pb-12 pt-20 text-center md:px-16 md:pt-28">
         <Reveal>
           <p className="mb-4 font-[family-name:var(--font-space-mono)] text-xs font-bold uppercase tracking-[0.15em] text-[#f0a830]">
             Nature Heroes
@@ -39,13 +40,20 @@ export default function NatureHeroesPage() {
         </Reveal>
       </section>
 
-      <section className="px-6 py-16 md:px-16">
+      {/* Network Stats */}
+      <section className="px-6 pb-12 md:px-16">
+        <div className="mx-auto max-w-[1000px]">
+          <LiveStats variant="grid" />
+        </div>
+      </section>
+
+      <section className="px-6 py-12 md:px-16">
         <Reveal>
           <div className="mx-auto grid max-w-[1000px] grid-cols-1 gap-4 md:grid-cols-3">
             {responsibilities.map((r) => (
               <div
                 key={r.title}
-                className="rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#1db954]/40"
+                className="rounded-3xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#1db954]/40"
               >
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-[#1db954]/10 text-[#1db954]">
                   <IconCheck className="h-5 w-5" />

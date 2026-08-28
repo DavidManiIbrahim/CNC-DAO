@@ -5,21 +5,6 @@ import Link from "next/link"
 import { latLngToXY, type RegisteredTree } from "@/lib/registeredTrees"
 import { useAllTrees } from "@/lib/useTrees"
 
-/**
- * TreeMap — ported from the custom code component on the live Framer site
- * (the canvas/pin-based registry map embedded under the "Global Registry"
- * section of the homepage, and presumably reused on /map).
- *
- * Original was static Framer-exported HTML with inline styles and no real
- * interactivity beyond CSS hover. This version adds actual state: working
- * filters, search, pan (drag), zoom, and a synced sidebar list <-> map.
- *
- * Tree data below is placeholder matching what's currently live (2 trees,
- * both minted, 0 formally "verified" yet). Swap `trees` for a real fetch
- * once you've got an API/DB behind this — the shape is (id, name, species,
- * location, country, status, x%, y%).
- */
-
 type TreeStatus = "verified" | "minted" | "pending"
 
 type Tree = {
@@ -28,8 +13,8 @@ type Tree = {
   location: string
   country: string
   status: TreeStatus
-  x: number // position as % of map width
-  y: number // position as % of map height
+  x: number
+  y: number
 }
 
 const statusColor: Record<TreeStatus, string> = {
@@ -85,62 +70,56 @@ export default function TreeMap() {
     [pan]
   )
 
-  const onMapMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!dragRef.current) return
-    const dx = e.clientX - dragRef.current.startX
-    const dy = e.clientY - dragRef.current.startY
-    setPan({ x: dragRef.current.panX + dx, y: dragRef.current.panY + dy })
-  }, [])
+  const onMapMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!dragRef.current) return
+      const dx = e.clientX - dragRef.current.startX
+      const dy = e.clientY - dragRef.current.startY
+      setPan({ x: dragRef.current.panX + dx, y: dragRef.current.panY + dy })
+    },
+    []
+  )
 
   const onMapMouseUp = useCallback(() => {
     dragRef.current = null
   }, [])
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-[#222] bg-[#0a0a0a] font-[family-name:var(--font-space-grotesk)] text-white">
-      {/* ---------- Toolbar ---------- */}
-      <div className="flex h-14 flex-shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#222] bg-[#0d0d0d] px-5">
-        <div className="flex flex-shrink-0 items-center gap-2">
-          <div className="flex h-[26px] w-[26px] items-center justify-center rounded-md bg-[#f5a800]">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="#0a0a0a">
-              <path d="M8 1.5C6 4 4 5 4 8C4 10.2 5.8 12 8 12C10.2 12 12 10.2 12 8C12 5 10 4 8 1.5Z" />
-              <line x1="8" y1="12" x2="8" y2="14.5" stroke="#0a0a0a" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="5.5" y1="14.5" x2="10.5" y2="14.5" stroke="#0a0a0a" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </div>
-          <span className="text-sm font-bold tracking-[-0.02em]">CNC DAO</span>
-          <div className="h-5 w-px bg-[#2e2e2e]" />
-          <span className="text-xs font-medium text-[#a0a0a0]">Global tree map</span>
+    <div className="flex h-full w-full flex-col overflow-hidden bg-card text-foreground select-none">
+      {/* ---------- Top toolbar ---------- */}
+      <div className="flex h-14 flex-shrink-0 items-center justify-between border-b border-border bg-card/90 px-4 backdrop-blur-md">
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-[#22c55e] animate-pulse" />
+          <span className="font-[family-name:var(--font-space-grotesk)] text-xs font-bold uppercase tracking-wider text-foreground">
+            Registry Map
+          </span>
         </div>
 
-        <div className="flex flex-1 flex-wrap items-center justify-center gap-1.5">
-          <span className="mr-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#555]">
-            Filter
-          </span>
+        {/* Filter pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto py-1">
           {filters.map((f) => (
             <button
               key={f.key}
               onClick={() => setActiveFilter(f.key)}
-              className="flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-medium transition-colors"
-              style={{
-                borderColor: activeFilter === f.key ? "#a0a0a0" : "#222",
-                color: activeFilter === f.key ? "#a0a0a0" : "#a0a0a0",
-                background: activeFilter === f.key ? "#a0a0a024" : "transparent",
-              }}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                activeFilter === f.key
+                  ? "bg-[#1db954] text-black border-[#1db954]"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
             >
               {f.dot && <span className="h-1.5 w-1.5 rounded-full" style={{ background: f.dot }} />}
               {"flag" in f && f.flag && <span>{f.flag}</span>}
-              {f.label}
+              <span>{f.label}</span>
             </button>
           ))}
         </div>
 
         <div className="flex flex-shrink-0 items-center gap-2">
-          <div className="flex items-center gap-1.5 rounded-full border border-[#22c55e33] bg-[#22c55e14] px-3 py-1 font-[family-name:var(--font-space-mono)] text-[10px] font-semibold text-[#22c55e]">
+          <div className="flex items-center gap-1.5 rounded-full border border-[#22c55e]/30 bg-[#22c55e]/10 px-3 py-1 font-[family-name:var(--font-space-mono)] text-[10px] font-bold text-[#22c55e]">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#22c55e]" />
-            1,240 live
+            {counts.total} on-chain
           </div>
-          <Link href="/tree-reg" className="rounded-lg bg-[#f5a800] px-4 py-1.5 text-[11px] font-bold text-[#0a0a0a] transition-transform hover:scale-105">
+          <Link href="/tree-reg" className="rounded-xl bg-[#1db954] px-4 py-1.5 text-xs font-bold text-black transition-transform hover:scale-105">
             + Plant a tree
           </Link>
         </div>
@@ -148,7 +127,7 @@ export default function TreeMap() {
 
       {/* ---------- Body ---------- */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Map */}
+        {/* Map Canvas View */}
         <div
           className="relative flex-1 select-none overflow-hidden bg-[#0d1117]"
           style={{ cursor: dragRef.current ? "grabbing" : "grab" }}
@@ -166,23 +145,13 @@ export default function TreeMap() {
               className="pointer-events-none absolute -inset-[1000px]"
               style={{
                 backgroundImage:
-                  "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+                  "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)",
                 backgroundSize: "48px 48px",
               }}
             />
             {/* crosshair */}
             <div className="pointer-events-none absolute left-[-1000px] right-[-1000px] top-1/2 h-px bg-[#f5a80014]" />
             <div className="pointer-events-none absolute bottom-[-1000px] top-[-1000px] left-1/2 w-px bg-[#f5a80014]" />
-            {/* glows */}
-            <div className="pointer-events-none absolute left-[15%] top-[20%] h-[400px] w-[400px] rounded-full bg-[#f5a80008] blur-[60px]" />
-            <div className="pointer-events-none absolute bottom-[10%] right-[20%] h-[300px] w-[300px] rounded-full bg-[#22c55e08] blur-[60px]" />
-
-            {/* cluster */}
-            <div className="absolute z-[15] -translate-x-1/2 -translate-y-1/2 cursor-pointer" style={{ top: "42%", left: "49%" }}>
-              <div className="flex h-8 w-8 items-center justify-center rounded-full border-[1.5px] border-[#f5a80066] bg-[#f5a80026] text-[11px] font-bold text-[#f5a800]">
-                18
-              </div>
-            </div>
 
             {/* pins */}
             {filteredTrees.map((t) => (
@@ -195,11 +164,11 @@ export default function TreeMap() {
                 onClick={() => setSelectedId(t.id)}
               >
                 <div
-                  className="relative z-[2] h-3 w-3 rounded-full border-2 border-[#0d1117] transition-transform"
+                  className="relative z-[2] h-3.5 w-3.5 rounded-full border-2 border-white transition-transform"
                   style={{
                     background: statusColor[t.status],
-                    boxShadow: `0 0 10px ${statusColor[t.status]}80`,
-                    transform: selectedId === t.id ? "scale(1.4)" : "scale(1)",
+                    boxShadow: `0 0 12px ${statusColor[t.status]}`,
+                    transform: selectedId === t.id ? "scale(1.5)" : "scale(1)",
                   }}
                 />
                 <div
@@ -207,8 +176,8 @@ export default function TreeMap() {
                   style={{ borderColor: `${statusColor[t.status]}66` }}
                 />
                 {hoveredId === t.id && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border border-[#222] bg-[#0a0a0ae6] px-2 py-0.5 text-[9px] text-white">
-                    {t.name} · {t.location.split(",")[0]}
+                  <div className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-xl border border-white/20 bg-black/90 px-3 py-1 text-xs text-white shadow-xl">
+                    <span className="font-bold">{t.name}</span> &bull; {t.location.split(",")[0]}
                   </div>
                 )}
               </div>
@@ -216,16 +185,16 @@ export default function TreeMap() {
           </div>
 
           {/* zoom controls */}
-          <div className="absolute right-4 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-1">
+          <div className="absolute right-4 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-1.5">
             <button
               onClick={() => setZoom((z) => Math.min(z + 0.2, 3))}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#222] bg-[#111111e6] text-sm font-bold text-[#a0a0a0]"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-card/90 text-sm font-bold text-foreground shadow backdrop-blur-sm hover:bg-muted"
             >
               +
             </button>
             <button
               onClick={() => setZoom((z) => Math.max(z - 0.2, 0.4))}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#222] bg-[#111111e6] text-sm font-bold text-[#a0a0a0]"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-card/90 text-sm font-bold text-foreground shadow backdrop-blur-sm hover:bg-muted"
             >
               −
             </button>
@@ -234,18 +203,16 @@ export default function TreeMap() {
                 setZoom(1)
                 setPan({ x: 0, y: 0 })
               }}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#222] bg-[#111111e6] text-[10px] font-bold text-[#a0a0a0]"
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-card/90 text-xs font-bold text-foreground shadow backdrop-blur-sm hover:bg-muted"
+              title="Reset center"
             >
               ⌖
-            </button>
-            <button className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#222] bg-[#111111e6] text-[10px] font-bold text-[#a0a0a0]">
-              ◎
             </button>
           </div>
 
           {/* legend */}
-          <div className="absolute left-4 top-4 z-20 rounded-xl border border-[#222] bg-[#111111eb] px-3.5 py-2.5">
-            <div className="mb-2 text-[9px] font-bold uppercase tracking-[0.08em] text-[#555]">
+          <div className="absolute left-4 top-4 z-20 rounded-2xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur-md">
+            <div className="mb-2 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
               Tree status
             </div>
             {[
@@ -253,77 +220,62 @@ export default function TreeMap() {
               { c: "#22c55e", l: "Verified on-chain" },
               { c: "#f5a800", l: "Pending validation" },
             ].map((s) => (
-              <div key={s.l} className="mb-1.5 flex items-center gap-1.5 text-[10px] text-[#a0a0a0] last:mb-0">
+              <div key={s.l} className="mb-1.5 flex items-center gap-2 text-xs font-medium text-foreground last:mb-0">
                 <span className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: s.c }} />
-                {s.l}
+                <span>{s.l}</span>
               </div>
             ))}
-            <div className="flex items-center gap-1.5 text-[10px] text-[#a0a0a0]">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full border border-[#f5a8004d] bg-[#f5a8001f] text-[9px] font-bold text-[#f5a800]">
-                N
-              </div>
-              Cluster of trees
-            </div>
           </div>
 
           <button
             onClick={() => setShowList((v) => !v)}
-            className="absolute bottom-5 left-4 z-20 flex items-center gap-1.5 rounded-lg border border-[#222] bg-[#111111e6] px-3 py-1.5 text-[10px] font-semibold text-[#a0a0a0]"
+            className="absolute bottom-4 left-4 z-20 flex items-center gap-1.5 rounded-xl border border-border bg-card/90 px-3 py-1.5 text-xs font-semibold text-foreground shadow backdrop-blur-sm hover:bg-muted"
           >
             <span>{showList ? "◀" : "▶"}</span>
             <span>{showList ? "Hide list" : "Show list"}</span>
           </button>
-
-          <div className="pointer-events-none absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full border border-[#222] bg-[#111111d9] px-3.5 py-1 font-[family-name:var(--font-space-mono)] text-[9px] text-[#555]">
-            Hover map to see coordinates
-          </div>
         </div>
 
         {/* Sidebar */}
         {showList && (
-          <div className="flex w-[300px] flex-shrink-0 flex-col overflow-hidden border-l border-[#222] bg-[#111111]">
-            <div className="flex-shrink-0 border-b border-[#222] px-4 pb-3 pt-4">
-              <div className="mb-0.5 font-[family-name:var(--font-space-grotesk)] text-[15px] font-bold">
+          <div className="flex w-[300px] flex-shrink-0 flex-col overflow-hidden border-l border-border bg-card">
+            <div className="flex-shrink-0 border-b border-border px-4 pb-3 pt-4">
+              <div className="mb-0.5 font-[family-name:var(--font-space-grotesk)] text-sm font-bold text-foreground">
                 Tree registry
               </div>
-              <div className="text-[10px] text-[#a0a0a0]">
-                Click a tree to locate it on the map
+              <div className="text-xs text-muted-foreground">
+                Click a tree to locate on canvas
               </div>
             </div>
 
-            <div className="flex-shrink-0 border-b border-[#222] px-3.5 py-2.5">
-              <div className="relative">
-                <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[#555]">
-                  🔍
-                </span>
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  type="text"
-                  placeholder="Search trees, species, location..."
-                  className="w-full rounded-lg border border-[#222] bg-[#161616] py-2 pl-8 pr-3 text-[11px] text-white outline-none placeholder:text-[#555]"
-                />
-              </div>
+            <div className="flex-shrink-0 border-b border-border p-3">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                type="text"
+                placeholder="Search trees, location..."
+                className="w-full rounded-xl border border-border bg-input py-1.5 px-3 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-[#1db954]/60"
+              />
             </div>
 
-            <div className="grid flex-shrink-0 grid-cols-3 gap-px border-b border-[#222] bg-[#222]">
-              <div className="bg-[#161616] px-2 py-2.5 text-center">
-                <div className="text-lg font-bold leading-none text-[#f5a800]">{counts.total}</div>
-                <div className="mt-0.5 text-[9px] text-[#a0a0a0]">Total</div>
+            <div className="grid flex-shrink-0 grid-cols-3 gap-px border-b border-border bg-border">
+              <div className="bg-card p-2 text-center">
+                <div className="text-base font-bold text-[#f5a800]">{counts.total}</div>
+                <div className="text-[10px] text-muted-foreground">Total</div>
               </div>
-              <div className="bg-[#161616] px-2 py-2.5 text-center">
-                <div className="text-lg font-bold leading-none text-[#22c55e]">{counts.verified}</div>
-                <div className="mt-0.5 text-[9px] text-[#a0a0a0]">Verified</div>
+              <div className="bg-card p-2 text-center">
+                <div className="text-base font-bold text-[#22c55e]">{counts.verified}</div>
+                <div className="text-[10px] text-muted-foreground">Verified</div>
               </div>
-              <div className="bg-[#161616] px-2 py-2.5 text-center">
-                <div className="text-lg font-bold leading-none text-[#a78bfa]">{counts.minted}</div>
-                <div className="mt-0.5 text-[9px] text-[#a0a0a0]">Minted</div>
+              <div className="bg-card p-2 text-center">
+                <div className="text-base font-bold text-[#a78bfa]">{counts.minted}</div>
+                <div className="text-[10px] text-muted-foreground">Minted</div>
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-2">
               {filteredTrees.length === 0 && (
-                <div className="px-2 py-6 text-center text-xs text-[#555]">No trees match.</div>
+                <div className="px-2 py-6 text-center text-xs text-muted-foreground">No trees match.</div>
               )}
               {filteredTrees.map((t) => (
                 <button
@@ -331,25 +283,24 @@ export default function TreeMap() {
                   onClick={() => setSelectedId(t.id)}
                   onMouseEnter={() => setHoveredId(t.id)}
                   onMouseLeave={() => setHoveredId(null)}
-                  className="mb-1 flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-colors"
-                  style={{
-                    borderColor: selectedId === t.id ? "#f5a80066" : "transparent",
-                    background: selectedId === t.id ? "#f5a8000f" : "transparent",
-                  }}
+                  className={`mb-1 flex w-full items-center gap-2.5 rounded-xl border p-2.5 text-left transition-colors ${
+                    selectedId === t.id
+                      ? "border-[#1db954] bg-[#1db954]/10"
+                      : "border-transparent hover:bg-muted"
+                  }`}
                 >
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#1e1e1e] text-[15px]">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-muted text-sm">
                     🌳
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-xs font-semibold">{t.name}</div>
-                    <div className="truncate text-[10px] text-[#a0a0a0]">{t.location}</div>
+                    <div className="truncate text-xs font-bold text-foreground">{t.name}</div>
+                    <div className="truncate text-[10px] text-muted-foreground">{t.location}</div>
                   </div>
                   <span
-                    className="ml-auto flex-shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[9px] font-semibold capitalize"
+                    className="ml-auto flex-shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[9px] font-bold capitalize"
                     style={{
-                      background: `${statusColor[t.status]}1a`,
+                      background: `${statusColor[t.status]}20`,
                       color: statusColor[t.status],
-                      borderColor: `${statusColor[t.status]}33`,
                     }}
                   >
                     {t.status}
@@ -362,23 +313,21 @@ export default function TreeMap() {
       </div>
 
       {/* ---------- Status bar ---------- */}
-      <div className="flex h-10 flex-shrink-0 items-center gap-6 border-t border-[#222] bg-[#0d0d0d] px-5 font-[family-name:var(--font-space-mono)] text-[10px] text-[#555]">
+      <div className="flex h-10 flex-shrink-0 items-center gap-6 border-t border-border bg-card px-5 font-[family-name:var(--font-space-mono)] text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#a78bfa]" />
-          {counts.minted} minted
+          <span className="h-2 w-2 rounded-full bg-[#a78bfa]" />
+          <span>{counts.minted} minted</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#22c55e]" />
-          {counts.verified} verified
+          <span className="h-2 w-2 rounded-full bg-[#22c55e]" />
+          <span>{counts.verified} verified</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#f5a800]" />
-          {counts.pending} pending
+          <span className="h-2 w-2 rounded-full bg-[#f5a800]" />
+          <span>{counts.pending} pending</span>
         </div>
-        <div className="ml-auto flex gap-4">
-          <span>38 countries</span>
-          <span>124 Nature Heroes</span>
-          <span className="text-[#22c55e]">Solana mainnet</span>
+        <div className="ml-auto hidden sm:flex gap-4">
+          <span className="text-[#22c55e] font-semibold">Solana Network</span>
         </div>
       </div>
     </div>
