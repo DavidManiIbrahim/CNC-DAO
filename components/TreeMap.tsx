@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react"
 import Link from "next/link"
 import { latLngToXY, type RegisteredTree } from "@/lib/registeredTrees"
 import { useAllTrees } from "@/lib/useTrees"
+import { useTheme } from "next-themes"
 
 type TreeStatus = "verified" | "minted" | "pending"
 
@@ -32,6 +33,9 @@ const filters = [
 ] as const
 
 export default function TreeMap() {
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === "dark"
+
   const [activeFilter, setActiveFilter] = useState<string>("all")
   const [search, setSearch] = useState("")
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -129,7 +133,7 @@ export default function TreeMap() {
       <div className="flex flex-1 overflow-hidden">
         {/* Map Canvas View */}
         <div
-          className="relative flex-1 select-none overflow-hidden bg-[#0d1117]"
+          className="relative flex-1 select-none overflow-hidden bg-slate-100 dark:bg-[#0d1117] transition-colors"
           style={{ cursor: dragRef.current ? "grabbing" : "grab" }}
           onMouseDown={onMapMouseDown}
           onMouseMove={onMapMouseMove}
@@ -144,14 +148,21 @@ export default function TreeMap() {
             <div
               className="pointer-events-none absolute -inset-[1000px]"
               style={{
-                backgroundImage:
-                  "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)",
+                backgroundImage: isDark
+                  ? "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)"
+                  : "linear-gradient(rgba(0,0,0,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.07) 1px, transparent 1px)",
                 backgroundSize: "48px 48px",
               }}
             />
             {/* crosshair */}
-            <div className="pointer-events-none absolute left-[-1000px] right-[-1000px] top-1/2 h-px bg-[#f5a80014]" />
-            <div className="pointer-events-none absolute bottom-[-1000px] top-[-1000px] left-1/2 w-px bg-[#f5a80014]" />
+            <div
+              className="pointer-events-none absolute left-[-1000px] right-[-1000px] top-1/2 h-px"
+              style={{ background: isDark ? "rgba(245,168,0,0.08)" : "rgba(0,0,0,0.08)" }}
+            />
+            <div
+              className="pointer-events-none absolute bottom-[-1000px] top-[-1000px] left-1/2 w-px"
+              style={{ background: isDark ? "rgba(245,168,0,0.08)" : "rgba(0,0,0,0.08)" }}
+            />
 
             {/* pins */}
             {filteredTrees.map((t) => (
@@ -164,10 +175,10 @@ export default function TreeMap() {
                 onClick={() => setSelectedId(t.id)}
               >
                 <div
-                  className="relative z-[2] h-3.5 w-3.5 rounded-full border-2 border-white transition-transform"
+                  className="relative z-[2] h-3.5 w-3.5 rounded-full border-2 border-card shadow-md transition-transform"
                   style={{
                     background: statusColor[t.status],
-                    boxShadow: `0 0 12px ${statusColor[t.status]}`,
+                    boxShadow: `0 0 10px ${statusColor[t.status]}80`,
                     transform: selectedId === t.id ? "scale(1.5)" : "scale(1)",
                   }}
                 />
@@ -176,7 +187,7 @@ export default function TreeMap() {
                   style={{ borderColor: `${statusColor[t.status]}66` }}
                 />
                 {hoveredId === t.id && (
-                  <div className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-xl border border-white/20 bg-black/90 px-3 py-1 text-xs text-white shadow-xl">
+                  <div className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-xl border border-border bg-card/95 px-3 py-1 text-xs text-foreground shadow-xl">
                     <span className="font-bold">{t.name}</span> &bull; {t.location.split(",")[0]}
                   </div>
                 )}

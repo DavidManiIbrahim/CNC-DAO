@@ -196,7 +196,7 @@ export default function Home() {
             <ParticleSphere
               particleCount={1800}
               particleSize={1.4}
-              colors={["#a9f5ae", "#22c55e", "#ffffff"]}
+              colors={["#1db954", "#22c55e", "#15803d"]}
               speed={0.18}
               cursorRadius={110}
               clickForce={30}

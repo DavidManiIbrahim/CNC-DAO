@@ -29,12 +29,12 @@ export default function OSMTreeMap({
     liveTrees.length > 0 ? [liveTrees[0].lat, liveTrees[0].lng] : [9.082, 8.6753]
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative bg-card ${className}`}>
       <MapContainer
         center={center}
         zoom={liveTrees.length > 1 ? 5 : 8}
         scrollWheelZoom={false}
-        style={{ height: "100%", width: "100%", background: "#0b0a12" }}
+        style={{ height: "100%", width: "100%", background: "transparent" }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -54,25 +54,15 @@ export default function OSMTreeMap({
             eventHandlers={{ click: () => setSatelliteView(t) }}
           >
             <Popup>
-              <div style={{ fontFamily: "sans-serif", fontSize: 13 }}>
-                <strong>{t.name}</strong>
-                <br />
-                {t.species} — {t.location}
-                <br />
-                <span style={{ textTransform: "capitalize" }}>{t.status}</span>
-                <br />
+              <div className="p-1 font-sans text-xs text-black">
+                <div className="font-bold text-sm text-gray-900">{t.name}</div>
+                <div className="text-gray-600 font-medium">{t.species} &bull; {t.location}</div>
+                <div className="text-gray-500 font-mono text-[10px] mt-0.5">
+                  {t.lat.toFixed(4)}, {t.lng.toFixed(4)}
+                </div>
                 <button
                   onClick={() => setSatelliteView(t)}
-                  style={{
-                    marginTop: 6,
-                    background: "#1db954",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 6,
-                    padding: "4px 10px",
-                    fontSize: 12,
-                    cursor: "pointer",
-                  }}
+                  className="mt-2 rounded-lg bg-[#1db954] px-2.5 py-1 text-[11px] font-bold text-black hover:bg-[#1db954]/90"
                 >
                   View satellite close-up
                 </button>
@@ -83,16 +73,16 @@ export default function OSMTreeMap({
       </MapContainer>
 
       {satelliteView && (
-        <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-black/80 p-4">
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-[#0b0a12]">
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-border bg-overlay shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <div>
-                <div className="text-sm font-bold text-white">{satelliteView.name}</div>
-                <div className="text-xs text-white/50">{satelliteView.location}</div>
+                <div className="text-sm font-bold text-foreground">{satelliteView.name}</div>
+                <div className="text-xs text-muted-foreground">{satelliteView.location}</div>
               </div>
               <button
                 onClick={() => setSatelliteView(null)}
-                className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70 hover:bg-white/20"
+                className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
               >
                 Close
               </button>
@@ -105,10 +95,6 @@ export default function OSMTreeMap({
                 scrollWheelZoom={true}
                 style={{ height: "100%", width: "100%" }}
               >
-                {/* Free satellite imagery, no API key required. Higher-
-                    resolution alternatives (Sentinel-2, Google Earth Engine)
-                    both require API keys/auth setup — worth swapping in once
-                    the backend team has those credentials. */}
                 <TileLayer
                   attribution="Tiles &copy; Esri"
                   url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -120,8 +106,8 @@ export default function OSMTreeMap({
                 />
               </MapContainer>
             </div>
-            <div className="border-t border-white/10 px-4 py-2 text-center text-[10px] text-white/30">
-              Satellite imagery © Esri — resolution varies by region
+            <div className="border-t border-border px-4 py-2 text-center text-[10px] text-muted-foreground">
+              Satellite imagery &copy; Esri &bull; Resolution varies by region
             </div>
           </div>
         </div>
