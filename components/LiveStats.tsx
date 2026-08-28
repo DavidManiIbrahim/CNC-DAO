@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
-import { Trees, CheckCircle2, Sparkles, MapPin, Users, Globe, Shield } from "lucide-react"
+import { Trees, CheckCircle2, Sparkles, Globe } from "lucide-react"
 
 interface LiveStatsProps {
   variant?: "grid" | "bar" | "compact"
@@ -13,7 +13,7 @@ export function LiveStats({ variant = "grid", className = "" }: LiveStatsProps) 
   const trees = useQuery(api.trees.listAll) ?? []
   const campaigns = useQuery(api.campaigns.list) ?? []
 
-  // Dynamic calculations
+  // Real-time Database Counts
   const totalTrees = trees.length
   const verifiedTrees = trees.filter(
     (t: any) => t.status === "verified" || t.status === "minted",
@@ -22,7 +22,7 @@ export function LiveStats({ variant = "grid", className = "" }: LiveStatsProps) 
   const pendingTrees = trees.filter((t: any) => t.status === "pending").length
   const activeCampaigns = campaigns.length
 
-  // Extract unique regions/locations
+  // Extract unique regions from real tree records
   const uniqueRegions = new Set(
     trees
       .map((t: any) => t.location?.split(",").pop()?.trim())
@@ -32,8 +32,8 @@ export function LiveStats({ variant = "grid", className = "" }: LiveStatsProps) 
   const stats = [
     {
       label: "Trees on Record",
-      value: totalTrees > 0 ? totalTrees.toLocaleString() : "1,240+",
-      sub: `${pendingTrees} in verification queue`,
+      value: totalTrees.toLocaleString(),
+      sub: `${pendingTrees} in review queue`,
       icon: Trees,
       color: "text-[#1db954]",
       bgColor: "bg-[#1db954]/10",
@@ -41,7 +41,7 @@ export function LiveStats({ variant = "grid", className = "" }: LiveStatsProps) 
     },
     {
       label: "Verified On-Chain",
-      value: verifiedTrees > 0 ? verifiedTrees.toLocaleString() : "1,180+",
+      value: verifiedTrees.toLocaleString(),
       sub: "2-of-2 validator consensus",
       icon: CheckCircle2,
       color: "text-[#1db954]",
@@ -50,7 +50,7 @@ export function LiveStats({ variant = "grid", className = "" }: LiveStatsProps) 
     },
     {
       label: "Proof-of-Stewardship NFTs",
-      value: mintedNFTs > 0 ? mintedNFTs.toLocaleString() : "940+",
+      value: mintedNFTs.toLocaleString(),
       sub: "Solana SPL tokens minted",
       icon: Sparkles,
       color: "text-[#a78bfa]",
@@ -59,8 +59,8 @@ export function LiveStats({ variant = "grid", className = "" }: LiveStatsProps) 
     },
     {
       label: "Active Campaigns",
-      value: activeCampaigns > 0 ? activeCampaigns.toString() : "12+",
-      sub: `${uniqueRegions || 8}+ global planting regions`,
+      value: activeCampaigns.toString(),
+      sub: `${uniqueRegions} active planting regions`,
       icon: Globe,
       color: "text-[#f0a830]",
       bgColor: "bg-[#f0a830]/10",
