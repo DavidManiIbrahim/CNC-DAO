@@ -74,6 +74,7 @@ export default defineSchema({
     region: v.string(),
     participantLimit: v.number(),
     description: v.string(),
+    imageUrl: v.optional(v.string()),
     createdBy: v.string(),
     createdByWallet: v.string(),
     joined: v.number(),

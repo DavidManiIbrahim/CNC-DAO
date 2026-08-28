@@ -8,6 +8,7 @@ export const create = mutation({
     region: v.string(),
     participantLimit: v.number(),
     description: v.string(),
+    imageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const creator = await ctx.db.get(args.creatorId)
@@ -20,6 +21,7 @@ export const create = mutation({
       region: args.region,
       participantLimit: args.participantLimit,
       description: args.description,
+      imageUrl: args.imageUrl,
       createdBy:
         creator.displayName || creator.name || creator.walletAddress || "Unknown",
       createdByWallet: creator.walletAddress ?? `email:${creator.email ?? ""}`,

@@ -104,18 +104,33 @@ export default function CampaignsPage() {
               return (
                 <div
                   key={c._id}
-                  className="relative flex flex-col justify-between rounded-3xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#1db954]/40 hover:shadow-md"
+                  className="relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#1db954]/40 hover:shadow-md"
                 >
-                  <div>
+                  {c.imageUrl && (
+                    <div className="relative h-44 w-full overflow-hidden border-b border-border bg-muted">
+                      <img
+                        src={c.imageUrl}
+                        alt={c.name}
+                        className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                      />
+                      <span className="absolute bottom-2 left-3 rounded-full bg-black/60 px-2.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-md">
+                        {c.region}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="p-6">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <h3 className="mb-1 font-[family-name:var(--font-syne)] text-lg font-bold text-foreground">
                           {c.name}
                         </h3>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <MapPin className="h-3 w-3 text-[#1db954]" />
-                          <span>{c.region}</span>
-                        </div>
+                        {!c.imageUrl && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3 text-[#1db954]" />
+                            <span>{c.region}</span>
+                          </div>
+                        )}
                       </div>
 
                       {isAdmin && (
@@ -134,7 +149,7 @@ export default function CampaignsPage() {
                     </p>
                   </div>
 
-                  <div>
+                  <div className="px-6 pb-6">
                     <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-muted">
                       <div
                         className="h-full rounded-full bg-[#1db954] transition-all duration-500"

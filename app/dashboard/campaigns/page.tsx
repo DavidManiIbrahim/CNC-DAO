@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { ConvexError } from "convex/values"
 import { useSessionUser } from "@/lib/useAuth"
+import { resizeImage } from "@/lib/mockAuth"
 import {
   Plus,
   Trash2,
@@ -14,6 +15,9 @@ import {
   MapPin,
   ShieldCheck,
   AlertCircle,
+  Upload,
+  X,
+  Image as ImageIcon,
 } from "lucide-react"
 
 export default function DashboardCampaignsPage() {
@@ -33,6 +37,10 @@ export default function DashboardCampaignsPage() {
     participantLimit: "100",
     description: "",
   })
+  const [imagePreview, setImagePreview] = useState<string>("")
+  const [imageLoading, setImageLoading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [joiningId, setJoiningId] = useState<string | null>(null)
@@ -41,6 +49,31 @@ export default function DashboardCampaignsPage() {
   // Stats
   const totalParticipants = campaigns.reduce((acc: number, c: any) => acc + (c.joined || 0), 0)
   const totalCapacity = campaigns.reduce((acc: number, c: any) => acc + (c.participantLimit || 0), 0)
+
+  async function handleImageFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith("image/")) {
+      setError("Please select a valid image file (PNG, JPG, WebP)")
+      return
+    }
+    setImageLoading(true)
+    try {
+      const resized = await resizeImage(file, 800)
+      setImagePreview(resized)
+    } catch {
+      setError("Failed to process image. Please try another file.")
+    } finally {
+      setImageLoading(false)
+    }
+  }
+
+  function handleRemoveImage() {
+    setImagePreview("")
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
@@ -57,8 +90,10 @@ export default function DashboardCampaignsPage() {
         region: form.region,
         participantLimit: parseInt(form.participantLimit, 10) || 10,
         description: form.description,
+        imageUrl: imagePreview || undefined,
       })
       setForm({ name: "", region: "", participantLimit: "100", description: "" })
+      setImagePreview("")
       setShowCreateModal(false)
     } catch (err: unknown) {
       if (err instanceof ConvexError) {
@@ -177,18 +212,33 @@ export default function DashboardCampaignsPage() {
             return (
               <div
                 key={c._id}
-                className="flex flex-col justify-between rounded-3xl border border-border bg-card p-6 shadow-sm transition-all hover:border-[#1db954]/40 hover:shadow-md"
+                className="flex flex-col justify-between overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all hover:border-[#1db954]/40 hover:shadow-md"
               >
-                <div>
+                {c.imageUrl && (
+                  <div className="relative h-44 w-full overflow-hidden border-b border-border bg-muted">
+                    <img
+                      src={c.imageUrl}
+                      alt={c.name}
+                      className="h-full w-full object-cover"
+                    />
+                    <span className="absolute bottom-2 left-3 rounded-full bg-black/60 px-2.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-md">
+                      {c.region}
+                    </span>
+                  </div>
+                )}
+
+                <div className="p-6">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h2 className="font-[family-name:var(--font-syne)] text-lg font-bold text-foreground">
                         {c.name}
                       </h2>
-                      <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                        <MapPin className="h-3 w-3 text-[#1db954]" />
-                        <span>{c.region}</span>
-                      </div>
+                      {!c.imageUrl && (
+                        <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3 text-[#1db954]" />
+                          <span>{c.region}</span>
+                        </div>
+                      )}
                     </div>
 
                     {isAdmin && (
@@ -207,7 +257,7 @@ export default function DashboardCampaignsPage() {
                   </p>
                 </div>
 
-                <div>
+                <div className="px-6 pb-6">
                   {/* Progress bar */}
                   <div className="mb-2">
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
@@ -269,7 +319,7 @@ export default function DashboardCampaignsPage() {
       {/* Create Campaign Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-border bg-overlay p-6 shadow-2xl">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-border bg-overlay p-6 shadow-2xl">
             <div className="mb-5 flex items-center justify-between border-b border-border pb-4">
               <div>
                 <h2 className="font-[family-name:var(--font-syne)] text-lg font-bold text-foreground">
@@ -298,6 +348,56 @@ export default function DashboardCampaignsPage() {
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="e.g. Niger Delta Mangrove Initiative"
                   className="w-full rounded-xl border border-border bg-input px-4 py-2.5 text-xs text-foreground outline-none transition-colors focus:border-[#1db954]/50"
+                />
+              </div>
+
+              {/* Campaign Image Upload */}
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-foreground">
+                  Campaign Banner Image
+                </label>
+                {imagePreview ? (
+                  <div className="relative overflow-hidden rounded-2xl border border-border bg-muted/30">
+                    <img
+                      src={imagePreview}
+                      alt="Campaign Banner Preview"
+                      className="h-36 w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white transition-transform hover:scale-110 hover:bg-black"
+                      title="Remove image"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/20 p-4 text-center transition-colors hover:border-[#1db954]/60 hover:bg-muted/40"
+                  >
+                    <div className="mb-1.5 flex h-9 w-9 items-center justify-center rounded-xl bg-[#1db954]/10 text-[#1db954]">
+                      {imageLoading ? (
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#1db954] border-t-transparent" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                    </div>
+                    <div className="text-xs font-semibold text-foreground">
+                      {imageLoading ? "Processing photo…" : "Upload campaign photo"}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      PNG, JPG, WebP (auto-optimized)
+                    </div>
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageFile}
+                  className="hidden"
                 />
               </div>
 
@@ -362,7 +462,7 @@ export default function DashboardCampaignsPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || imageLoading}
                   className="flex items-center gap-1.5 rounded-xl bg-[#1db954] px-5 py-2 text-xs font-bold text-black hover:bg-[#1db954]/90 disabled:opacity-50"
                 >
                   <Plus className="h-3.5 w-3.5" />

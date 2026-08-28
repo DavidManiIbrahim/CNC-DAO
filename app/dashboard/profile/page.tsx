@@ -6,7 +6,10 @@ import { useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { setMockUser, resizeImage, roleLabels, type MockUser } from "@/lib/mockAuth"
 import { useSessionUser } from "@/lib/useAuth"
-import { Camera, Check, User, Sparkles } from "lucide-react"
+import { useMyTrees } from "@/lib/useTrees"
+import { getBadges } from "@/lib/badges"
+import { BadgeIcon } from "@/components/Icons"
+import { Camera, Check, User, Sparkles, Award, Shield } from "lucide-react"
 
 export default function ProfilePage() {
   const user = useSessionUser()
@@ -18,8 +21,13 @@ export default function ProfilePage() {
   const fileRef = useRef<HTMLInputElement>(null)
   const updateProfile = useMutation(api.users.updateProfile)
 
+  const myTrees = useMyTrees(user?.walletAddress)
+
   if (!user) return null
   const currentUser = user
+
+  const badges = getBadges(user, myTrees)
+  const earnedCount = badges.filter((b) => b.earned).length
 
   function applyUser(u: any) {
     const updated: MockUser = {
@@ -64,17 +72,19 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <div className="mb-8">
+    <div className="mx-auto max-w-4xl space-y-8">
+      {/* Header */}
+      <div>
         <h1 className="font-[family-name:var(--font-syne)] text-2xl font-bold text-foreground">
-          Profile Settings
+          Member Profile & Achievements
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          How you appear across the CNC DAO network.
+          Manage your network identity, credentials, and earned proof-of-stewardship badges.
         </p>
       </div>
 
-      <div className="rounded-3xl border border-border bg-card p-8 shadow-md">
+      {/* Profile Card */}
+      <div className="rounded-3xl border border-border bg-card p-6 md:p-8 shadow-md">
         <div className="mb-6 flex flex-col items-start gap-5 sm:flex-row sm:items-center">
           <div className="group relative flex-shrink-0">
             <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-[#1db954]/15 font-[family-name:var(--font-syne)] text-2xl font-bold text-[#1db954]">
@@ -162,6 +172,55 @@ export default function ProfilePage() {
             .
           </div>
         )}
+      </div>
+
+      {/* Integrated Badges & Achievements Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Award className="h-5 w-5 text-[#1db954]" />
+            <h2 className="font-[family-name:var(--font-syne)] text-lg font-bold text-foreground">
+              Earned Badges & Network Achievements
+            </h2>
+          </div>
+          <span className="rounded-full bg-[#1db954]/15 px-3 py-1 font-[family-name:var(--font-space-mono)] text-xs font-bold text-[#1db954]">
+            {earnedCount} / {badges.length} Earned
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {badges.map((b) => (
+            <div
+              key={b.id}
+              className={`flex items-start gap-3 rounded-2xl border p-4 transition-all ${
+                b.earned
+                  ? "border-[#1db954]/30 bg-[#1db954]/[0.06] shadow-sm"
+                  : "border-border bg-card/60 opacity-60"
+              }`}
+            >
+              <div
+                className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl ${
+                  b.earned ? "bg-[#1db954]/15 text-[#1db954]" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                <BadgeIcon name={b.icon} className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-sm font-bold text-foreground">{b.title}</span>
+                  {b.earned && (
+                    <span className="rounded-full bg-[#1db954]/20 px-1.5 py-0.2 text-[9px] font-bold text-[#1db954]">
+                      Earned
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  {b.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
