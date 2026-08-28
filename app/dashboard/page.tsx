@@ -7,6 +7,8 @@ import { BadgeIcon } from "@/components/Icons"
 import { getBadges } from "@/lib/badges"
 import { useSessionUser } from "@/lib/useAuth"
 import { useMyTrees, useAllTrees } from "@/lib/useTrees"
+import { useState, useEffect } from "react"
+import { getStoredMessages } from "@/lib/messagesStorage"
 import {
   Users,
   Shield,
@@ -52,10 +54,15 @@ export default function DashboardOverviewPage() {
   ) ?? []
 
   const campaigns = useQuery(api.campaigns.list) ?? []
-  const contactMessages = useQuery(
-    api.users.listMessages,
-    isAdmin ? {} : "skip"
-  ) ?? []
+
+  // Contact messages local & hybrid state
+  const [contactMessages, setContactMessages] = useState(() => getStoredMessages())
+
+  useEffect(() => {
+    const handler = () => setContactMessages(getStoredMessages())
+    window.addEventListener("messages:change", handler)
+    return () => window.removeEventListener("messages:change", handler)
+  }, [])
 
   if (!user) return null
 
