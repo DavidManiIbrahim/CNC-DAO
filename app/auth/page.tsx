@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useMutation } from "convex/react"
+import { ConvexError } from "convex/values"
 import { api } from "@/convex/_generated/api"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { setMockUser } from "@/lib/mockAuth"
 import type { MockUser } from "@/lib/mockAuth"
+import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-react"
 
 export default function AuthPage() {
   const router = useRouter()
@@ -17,7 +19,10 @@ export default function AuthPage() {
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [passwordFocused, setPasswordFocused] = useState(false)
   const [convexReady, setConvexReady] = useState(true)
 
   const registerMutation = useMutation(api.users.register)
@@ -32,6 +37,7 @@ export default function AuthPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
+    setSuccess("")
     setLoading(true)
 
     try {
@@ -52,9 +58,28 @@ export default function AuthPage() {
         joinedAt: result.joinedAt,
       }
       setMockUser(user)
-      router.push("/dashboard")
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong")
+      setSuccess(
+        mode === "login"
+          ? "Login successful! Redirecting to dashboard..."
+          : "Account created successfully! Redirecting..."
+      )
+      setTimeout(() => router.push("/dashboard"), 1500)
+    } catch (err: unknown) {
+      if (err instanceof ConvexError) {
+        setError(typeof err.data === "string" ? err.data : JSON.stringify(err.data))
+      } else if (err && typeof err === "object" && "data" in err && typeof (err as { data: unknown }).data === "string") {
+        setError((err as { data: string }).data)
+      } else if (err instanceof Error) {
+        const cleaned = err.message
+          .replace(/^\[CONVEX[^\]]*\]\s*/i, "")
+          .replace(/^(?:Server Error\s*)?(?:Uncaught\s+)?Error:\s*/i, "")
+          .split("\n")[0]
+          .split(" at ")[0]
+          .trim()
+        setError(cleaned || "Something went wrong. Please try again.")
+      } else {
+        setError("Something went wrong. Please try again.")
+      }
     } finally {
       setLoading(false)
     }
@@ -136,20 +161,42 @@ export default function AuthPage() {
                     <label htmlFor="password" className="mb-1 block text-xs font-medium text-white/60">
                       Password
                     </label>
-                    <input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder={mode === "register" ? "At least 6 characters" : "Your password"}
-                      required
-                      minLength={6}
-                      className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-[#1db954]/40"
-                    />
+                    <div className="relative">
+                      <input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        onFocus={() => setPasswordFocused(true)}
+                        onBlur={() => setPasswordFocused(false)}
+                        placeholder={mode === "register" ? "At least 6 characters" : "Your password"}
+                        required
+                        minLength={6}
+                        className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 pr-11 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-[#1db954]/40"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-yellow-500 transition-colors hover:text-yellow-400"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
 
                   {error && (
-                    <p className="text-sm text-red-400">{error}</p>
+                    <div className="flex items-start gap-2.5 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                      <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+
+                  {success && (
+                    <div className="flex items-start gap-2.5 rounded-xl border border-[#1db954]/20 bg-[#1db954]/10 px-4 py-3 text-sm text-[#1db954]">
+                      <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                      <span>{success}</span>
+                    </div>
                   )}
 
                   <button

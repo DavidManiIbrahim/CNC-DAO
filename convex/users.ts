@@ -1,4 +1,4 @@
-import { v } from "convex/values"
+import { v, ConvexError } from "convex/values"
 import { mutation, query } from "./_generated/server"
 
 type UserDoc = {
@@ -83,11 +83,11 @@ export const register = mutation({
       .first()
 
     if (existing) {
-      throw new Error("A user with this email already exists")
+      throw new ConvexError("A user with this email already exists")
     }
 
     if (args.password.length < 6) {
-      throw new Error("Password must be at least 6 characters")
+      throw new ConvexError("Password must be at least 6 characters")
     }
 
     const salt = generateSalt()
@@ -102,7 +102,7 @@ export const register = mutation({
     })
 
     const created = await ctx.db.get(userId)
-    if (!created) throw new Error("Failed to create user")
+    if (!created) throw new ConvexError("Failed to create user")
     return toPublicUser(created)
   },
 })
@@ -119,18 +119,18 @@ export const login = mutation({
       .first()
 
     if (!user) {
-      throw new Error("Invalid email or password")
+      throw new ConvexError("No account found with this email. Please check your email or create a new account.")
     }
 
     if (!user.passwordHash) {
-      throw new Error("This account uses wallet login")
+      throw new ConvexError("This account was created with a wallet. Please connect your wallet to sign in.")
     }
 
     const [salt, storedHash] = user.passwordHash.split(":")
     const hash = await hashPassword(args.password, salt)
 
     if (hash !== storedHash) {
-      throw new Error("Invalid email or password")
+      throw new ConvexError("Incorrect password. Please try again.")
     }
 
     return toPublicUser(user)

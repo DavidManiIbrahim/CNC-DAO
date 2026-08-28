@@ -39,14 +39,9 @@ export function useAllTrees(): RegisteredTree[] {
     return () => window.removeEventListener("trees:change", refresh)
   }, [])
 
-  if (dbTrees === undefined || dbTrees.length === 0) return localTrees
-
-  const dbMapped = dbTrees.map(toRegisteredTree)
-  const dbKeys = new Set(dbMapped.map((t) => `${t.name}|${t.lat}|${t.lng}`))
-  const extra = localTrees.filter(
-    (t) => isSeedTree(t.id) || !dbKeys.has(`${t.name}|${t.lat}|${t.lng}`),
-  )
-  return [...dbMapped, ...extra]
+  if (dbTrees === undefined) return localTrees
+  if (dbTrees.length > 0) return dbTrees.map(toRegisteredTree)
+  return localTrees
 }
 
 /**

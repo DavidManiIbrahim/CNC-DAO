@@ -25,11 +25,18 @@ export default function DashboardOverviewPage() {
   const quickLinks = [
     { href: "/dashboard/profile", title: "Edit Profile", desc: "Photo, display name, bio", icon: "leaf" as const },
     { href: "/dashboard/badges", title: "View Badges", desc: "Your earned achievements", icon: "star" as const },
+    { href: "/dashboard/nft", title: "NFT Gallery", desc: "Proof-of-stewardship NFTs", icon: "sparkles" as const },
     ...((user.role === "nature_hero" || user.role === "admin")
-      ? [{ href: "/dashboard/verification", title: "Verification Queue", desc: "Approve pending trees", icon: "shield" as const }]
+      ? [
+          { href: "/dashboard/verification", title: "Tree Verification", desc: "Approve pending tree submissions", icon: "shield" as const },
+          { href: "/dashboard/map", title: "Admin Map & Registry", desc: "Live geographical database registry", icon: "sparkles" as const },
+        ]
       : []),
     ...(user.role === "admin"
-      ? [{ href: "/dashboard/users", title: "User Management", desc: "Review & manage members", icon: "crown" as const }]
+      ? [{ href: "/dashboard/hero-verification", title: "Hero Verification", desc: "Review Nature Hero applications", icon: "crown" as const }]
+      : []),
+    ...(user.role === "admin"
+      ? [{ href: "/dashboard/users", title: "User Management", desc: "Review & manage network users", icon: "users" as const }]
       : []),
   ]
 

@@ -11,6 +11,7 @@ import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { IconCheck, IconArrow } from "@/components/Icons"
 import { getMockUser, connectMockWallet } from "@/lib/mockAuth"
+import { Mail } from "lucide-react"
 
 const wallets = [
   { name: "Phantom", note: "DETECTED", emoji: "👻" },
@@ -106,7 +107,7 @@ export default function ConnectWalletPage() {
                 href="/auth"
                 className="flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-left transition-colors hover:border-[#1db954]/40 hover:bg-white/[0.06]"
               >
-                <span className="text-xl">✉️</span>
+                <Mail className="h-5 w-5" />
                 <span className="text-sm font-medium">Sign in with Email</span>
               </Link>
 
