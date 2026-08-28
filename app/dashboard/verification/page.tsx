@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { useSessionUser } from "@/lib/useAuth"
+import { getTreeImage } from "@/lib/treePhotos"
 import {
   CheckCircle,
   Clock,
@@ -19,6 +20,7 @@ import {
   Calendar,
   Layers,
   Leaf,
+  Image as ImageIcon,
 } from "lucide-react"
 
 type FilterTab = "all" | "pending" | "verified" | "minted" | "mine"
@@ -108,7 +110,7 @@ export default function TreeVerificationPage() {
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {isVerifier
-              ? "Review, inspect full tree metadata, approve pending submissions, and authorize on-chain NFTs."
+              ? "Review, inspect full tree photos & metadata, approve pending submissions, and authorize on-chain NFTs."
               : "Track the verification and on-chain minting progress of your tree registrations."}
           </p>
         </div>
@@ -275,7 +277,7 @@ export default function TreeVerificationPage() {
       <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
         <div className="min-w-[760px]">
           {/* Table Header */}
-          <div className="hidden grid-cols-[1.5fr_1.3fr_1fr_1fr_auto] items-center gap-4 border-b border-border bg-muted/70 px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground md:grid">
+          <div className="hidden grid-cols-[1.6fr_1.3fr_1fr_1fr_auto] items-center gap-4 border-b border-border bg-muted/70 px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground md:grid">
             <span>Tree & Species</span>
             <span>Location & Coordinates</span>
             <span>Submitter</span>
@@ -296,6 +298,7 @@ export default function TreeVerificationPage() {
               filteredTrees.map((t: any) => {
                 const isLoading = actionLoadingId === t._id
                 const isOwner = t.walletAddress === user?.walletAddress
+                const treeImg = getTreeImage(t.imageUrl, t.species)
                 const shortWallet = t.walletAddress
                   ? t.walletAddress.startsWith("email:")
                     ? t.walletAddress.replace("email:", "")
@@ -305,20 +308,29 @@ export default function TreeVerificationPage() {
                 return (
                   <div
                     key={t._id}
-                    className="grid grid-cols-1 cursor-pointer gap-3 p-5 transition-colors hover:bg-card-hover md:grid-cols-[1.5fr_1.3fr_1fr_1fr_auto] md:items-center md:gap-4"
+                    className="grid grid-cols-1 cursor-pointer gap-3 p-5 transition-colors hover:bg-card-hover md:grid-cols-[1.6fr_1.3fr_1fr_1fr_auto] md:items-center md:gap-4"
                     onClick={() => setSelectedTree(t)}
                   >
-                    {/* Tree & Species */}
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate text-sm font-bold text-foreground">{t.name}</span>
-                        {isOwner && (
-                          <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-semibold text-muted-foreground">
-                            Mine
-                          </span>
-                        )}
+                    {/* Tree & Species with Image Thumbnail */}
+                    <div className="min-w-0 flex items-center gap-3">
+                      <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl border border-border bg-muted">
+                        <img
+                          src={treeImg}
+                          alt={t.name}
+                          className="h-full w-full object-cover"
+                        />
                       </div>
-                      <div className="truncate text-xs text-muted-foreground">{t.species}</div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate text-sm font-bold text-foreground">{t.name}</span>
+                          {isOwner && (
+                            <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-semibold text-muted-foreground">
+                              Mine
+                            </span>
+                          )}
+                        </div>
+                        <div className="truncate text-xs text-muted-foreground">{t.species}</div>
+                      </div>
                     </div>
 
                     {/* Location */}
@@ -375,7 +387,7 @@ export default function TreeVerificationPage() {
                       <button
                         onClick={() => setSelectedTree(t)}
                         className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
-                        title="Inspect tree details"
+                        title="Inspect tree details & photo"
                         aria-label="Inspect tree details"
                       >
                         <Eye className="h-4 w-4" />
@@ -464,6 +476,23 @@ export default function TreeVerificationPage() {
               >
                 <X className="h-5 w-5" />
               </button>
+            </div>
+
+            {/* Tree Photo Banner */}
+            <div className="relative mt-4 h-52 w-full overflow-hidden rounded-2xl border border-border bg-muted shadow-inner">
+              <img
+                src={getTreeImage(selectedTree.imageUrl, selectedTree.species)}
+                alt={selectedTree.name}
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                <span className="rounded-full bg-black/70 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
+                  {selectedTree.species}
+                </span>
+                <span className="rounded-full bg-black/70 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
+                  {selectedTree.location}
+                </span>
+              </div>
             </div>
 
             {/* Modal Body */}

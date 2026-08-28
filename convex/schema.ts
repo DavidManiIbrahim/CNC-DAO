@@ -48,6 +48,7 @@ export default defineSchema({
     location: v.string(),
     lat: v.number(),
     lng: v.number(),
+    imageUrl: v.optional(v.string()),
     status: treeStatuses,
     createdAt: v.string(),
   })

@@ -17,6 +17,7 @@ export const register = mutation({
     location: v.string(),
     lat: v.number(),
     lng: v.number(),
+    imageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const id = await ctx.db.insert("trees", {
@@ -26,6 +27,7 @@ export const register = mutation({
       location: args.location,
       lat: args.lat,
       lng: args.lng,
+      imageUrl: args.imageUrl,
       status: "pending",
       createdAt: new Date().toISOString(),
     })
