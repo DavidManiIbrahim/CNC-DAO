@@ -239,9 +239,9 @@ export default function UsersPage() {
 
       {/* Users Table */}
       <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
-        <div className="min-w-[760px]">
-          {/* Adjusted Polished Table Header */}
-          <div className="hidden grid-cols-[2fr_1.6fr_1.2fr_1fr_240px] items-center gap-4 border-b border-border bg-muted/70 px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground md:grid">
+        <div className="min-w-[700px]">
+          {/* Table Header */}
+          <div className="hidden grid-cols-[2fr_1.8fr_1.2fr_1fr_120px] items-center gap-4 border-b border-border bg-muted/70 px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground md:grid">
             <span className="flex items-center gap-1.5">
               <span>Member Profile</span>
             </span>
@@ -266,7 +266,7 @@ export default function UsersPage() {
                 return (
                   <div
                     key={u._id}
-                    className="grid grid-cols-1 gap-3 p-5 transition-colors hover:bg-card-hover md:grid-cols-[2fr_1.6fr_1.2fr_1fr_240px] md:items-center md:gap-4"
+                    className="grid grid-cols-1 gap-3 p-5 transition-colors hover:bg-card-hover md:grid-cols-[2fr_1.8fr_1.2fr_1fr_120px] md:items-center md:gap-4"
                   >
                     {/* User Profile */}
                     <div className="min-w-0 flex items-center gap-3">
@@ -328,44 +328,44 @@ export default function UsersPage() {
                       <span className="text-xs text-muted-foreground">{joined}</span>
                     </div>
 
-                    {/* Action Buttons */}
+                    {/* Action Icon Buttons with Hover Tooltips */}
                     <div className="flex items-center justify-end gap-1.5">
-                      {/* Make Admin Button */}
+                      {/* Make Admin Icon Button */}
                       {u.role !== "admin" && (
                         <button
                           disabled={isLoading}
                           onClick={() => handleRoleChange(u._id, "admin", displayName)}
-                          className="flex items-center gap-1 rounded-xl bg-red-500/10 px-2.5 py-1.5 text-xs font-bold text-red-500 transition-colors hover:bg-red-500/20 disabled:opacity-50"
+                          className="flex h-8 w-8 items-center justify-center rounded-xl bg-red-500/10 text-red-500 transition-all hover:scale-110 hover:bg-red-500/20 disabled:opacity-50"
                           title="Promote to Full Administrator"
+                          aria-label="Promote to Full Administrator"
                         >
-                          <Crown className="h-3 w-3" />
-                          <span>Make Admin</span>
+                          <Crown className="h-4 w-4" />
                         </button>
                       )}
 
-                      {/* Make Hero Button */}
+                      {/* Make Hero Icon Button */}
                       {u.role !== "nature_hero" && u.role !== "admin" && (
                         <button
                           disabled={isLoading}
                           onClick={() => handleRoleChange(u._id, "nature_hero", displayName)}
-                          className="flex items-center gap-1 rounded-xl bg-[#f0a830]/10 px-2.5 py-1.5 text-xs font-bold text-[#f0a830] transition-colors hover:bg-[#f0a830]/20 disabled:opacity-50"
+                          className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#f0a830]/10 text-[#f0a830] transition-all hover:scale-110 hover:bg-[#f0a830]/20 disabled:opacity-50"
                           title="Promote to Nature Hero Validator"
+                          aria-label="Promote to Nature Hero Validator"
                         >
-                          <ShieldCheck className="h-3 w-3" />
-                          <span>Make Hero</span>
+                          <ShieldCheck className="h-4 w-4" />
                         </button>
                       )}
 
-                      {/* Demote to User */}
+                      {/* Demote Icon Button */}
                       {u.role && u.role !== "user" && (
                         <button
                           disabled={isLoading}
                           onClick={() => handleRoleChange(u._id, "user", displayName)}
-                          className="flex items-center gap-1 rounded-xl border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
-                          title="Set role to standard user"
+                          className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-all hover:scale-110 hover:bg-muted hover:text-foreground disabled:opacity-50"
+                          title="Demote to Community Planter"
+                          aria-label="Demote to Community Planter"
                         >
-                          <UserX className="h-3 w-3" />
-                          <span>Demote</span>
+                          <UserX className="h-4 w-4" />
                         </button>
                       )}
                     </div>
