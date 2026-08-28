@@ -19,8 +19,14 @@ function toRegisteredTree(t: Doc<"trees">): RegisteredTree {
     location: t.location,
     lat: t.lat,
     lng: t.lng,
+    imageUrl: t.imageUrl,
     status: t.status,
   }
+}
+
+function normalizeAddress(addr?: string | null): string {
+  if (!addr) return ""
+  return addr.toLowerCase().replace(/^(google:|email:)/, "").trim()
 }
 
 /**
@@ -40,7 +46,13 @@ export function useAllTrees(): RegisteredTree[] {
   }, [])
 
   if (dbTrees === undefined) return localTrees
-  if (dbTrees.length > 0) return dbTrees.map(toRegisteredTree)
+  if (dbTrees.length > 0) {
+    const dbMapped = dbTrees.map(toRegisteredTree)
+    // Combine with any local trees that aren't yet in db
+    const existingIds = new Set(dbMapped.map((t) => t.id))
+    const uniqueLocal = localTrees.filter((t) => !existingIds.has(t.id))
+    return [...dbMapped, ...uniqueLocal]
+  }
   return localTrees
 }
 
@@ -50,10 +62,7 @@ export function useAllTrees(): RegisteredTree[] {
  * unavailable.
  */
 export function useMyTrees(walletAddress?: string | null): RegisteredTree[] {
-  const dbTrees = useQuery(
-    api.trees.listMine,
-    walletAddress ? { walletAddress } : "skip",
-  )
+  const allDbTrees = useQuery(api.trees.listAll)
   const [localTrees, setLocalTrees] = useState<RegisteredTree[]>(() => getUserTrees())
 
   useEffect(() => {
@@ -63,6 +72,26 @@ export function useMyTrees(walletAddress?: string | null): RegisteredTree[] {
     return () => window.removeEventListener("trees:change", refresh)
   }, [])
 
-  if (dbTrees === undefined || dbTrees.length === 0) return localTrees
-  return dbTrees.map(toRegisteredTree)
+  const normalizedUser = normalizeAddress(walletAddress)
+
+  // If DB trees are available, find trees matching user address
+  if (allDbTrees && allDbTrees.length > 0) {
+    const matchedDb = allDbTrees.filter((t) => {
+      if (!walletAddress && !normalizedUser) return false
+      const tNorm = normalizeAddress(t.walletAddress)
+      return (
+        t.walletAddress === walletAddress ||
+        (normalizedUser.length > 0 && tNorm === normalizedUser) ||
+        (normalizedUser.length > 0 && (tNorm.includes(normalizedUser) || normalizedUser.includes(tNorm)))
+      )
+    }).map(toRegisteredTree)
+
+    if (matchedDb.length > 0) {
+      const dbIds = new Set(matchedDb.map((t) => t.id))
+      const uniqueLocal = localTrees.filter((t) => !dbIds.has(t.id))
+      return [...matchedDb, ...uniqueLocal]
+    }
+  }
+
+  return localTrees
 }
