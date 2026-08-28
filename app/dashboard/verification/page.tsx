@@ -253,10 +253,11 @@ export default function TreeVerificationPage() {
       </div>
 
       {/* Unified Table */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
-        <div className="hidden grid-cols-[1.5fr_1.3fr_1fr_1fr_auto] gap-4 border-b border-border px-5 py-3.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground md:grid">
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        {/* Adjusted Polished Table Header */}
+        <div className="hidden grid-cols-[1.5fr_1.3fr_1fr_1fr_auto] items-center gap-4 border-b border-border bg-muted/70 px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground md:grid">
           <span>Tree & Species</span>
-          <span>Location</span>
+          <span>Location & Coordinates</span>
           <span>Submitter</span>
           <span>Status</span>
           <span className="text-right">Actions</span>

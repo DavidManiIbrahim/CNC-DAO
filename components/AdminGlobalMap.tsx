@@ -341,6 +341,12 @@ export default function AdminGlobalMap() {
             </div>
           </div>
 
+          {/* Table Header Bar */}
+          <div className="flex items-center justify-between border-b border-border bg-muted/60 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <span>Tree & Details</span>
+            <span>Status / Action</span>
+          </div>
+
           {/* Registry List */}
           <div className="flex-1 overflow-y-auto divide-y divide-border p-2">
             {filteredTrees.length === 0 ? (

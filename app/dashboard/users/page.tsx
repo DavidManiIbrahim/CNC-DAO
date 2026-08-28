@@ -3,162 +3,220 @@
 import { useState, useMemo } from "react"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
-import { roleLabels, type UserRole } from "@/lib/mockAuth"
 import { useSessionUser } from "@/lib/useAuth"
 import {
+  ShieldCheck,
+  UserCheck,
+  UserX,
+  Search,
   Shield,
   Crown,
-  Search,
-  Trash2,
-  CheckCircle,
-  UserCheck,
-  ShieldAlert,
-  UserX,
 } from "lucide-react"
 
-function formatUserDisplay(u: any): string {
-  if (u.displayName) return u.displayName
-  if (u.name) return u.name
-  if (u.walletAddress) {
-    if (u.walletAddress.startsWith("google:") || u.walletAddress.startsWith("email:")) {
-      const clean = u.walletAddress.replace(/^(google|email):/, "")
-      return clean.includes("@") ? clean.split("@")[0] : clean
-    }
-    return `${u.walletAddress.slice(0, 5)}...${u.walletAddress.slice(-4)}`
-  }
-  if (u.email) return u.email.split("@")[0]
-  return "Unnamed Member"
-}
-
-export default function UserManagementPage() {
+export default function UsersPage() {
   const user = useSessionUser()
-  const setRoleMutation = useMutation(api.users.setUserRole)
-  const removeMutation = useMutation(api.users.removeUser)
-
-  const adminId = user?.userId
-  const users =
-    useQuery(api.users.listUsers, adminId ? { adminId: adminId as any } : "skip") ?? []
   const isAdmin = user?.role === "admin"
+  const adminId = user?.userId
+
+  const dbUsers = useQuery(
+    api.users.listUsers,
+    adminId ? { adminId: adminId as any } : "skip"
+  ) ?? []
+
+  const setUserRole = useMutation(api.users.setUserRole)
 
   const [searchQuery, setSearchQuery] = useState("")
   const [roleFilter, setRoleFilter] = useState<string>("all")
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
 
-  // Filtered list
+  // Filter users
   const filteredUsers = useMemo(() => {
-    return users.filter((u: any) => {
+    return dbUsers.filter((u: any) => {
       if (roleFilter !== "all" && u.role !== roleFilter) return false
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
-        const matchName = u.displayName?.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q)
+        const matchName = u.name?.toLowerCase().includes(q)
         const matchEmail = u.email?.toLowerCase().includes(q)
         const matchWallet = u.walletAddress?.toLowerCase().includes(q)
-        return matchName || matchEmail || matchWallet
+        const matchDisplay = u.displayName?.toLowerCase().includes(q)
+        return matchName || matchEmail || matchWallet || matchDisplay
       }
       return true
     })
-  }, [users, roleFilter, searchQuery])
+  }, [dbUsers, roleFilter, searchQuery])
 
-  if (!user) return null
+  // Quick stats
+  const stats = {
+    total: dbUsers.length,
+    admins: dbUsers.filter((u: any) => u.role === "admin").length,
+    natureHeroes: dbUsers.filter((u: any) => u.role === "nature_hero").length,
+    regularUsers: dbUsers.filter((u: any) => u.role === "user" || !u.role).length,
+  }
 
-  async function setRole(targetId: string, role: UserRole, targetName: string) {
-    if (!adminId) return
-    const isPromotingToAdmin = role === "admin"
-    if (
-      isPromotingToAdmin &&
-      !confirm(`Grant Administrator privileges to "${targetName}"? They will have full network and user moderation access.`)
-    ) {
-      return
+  async function handleRoleChange(targetUserId: string, newRole: "admin" | "nature_hero" | "user", userName: string) {
+    if (!user?.userId || !isAdmin) return
+    const isSelf = targetUserId === user.userId
+
+    if (isSelf && newRole !== "admin") {
+      if (!confirm("Warning: You are about to remove your own Admin privileges. Are you sure?")) {
+        return
+      }
+    } else {
+      if (!confirm(`Are you sure you want to change ${userName}'s role to ${newRole.toUpperCase()}?`)) {
+        return
+      }
     }
 
-    setActionLoadingId(targetId)
+    setActionLoadingId(targetUserId)
     try {
-      await setRoleMutation({
-        adminId: adminId as any,
-        userId: targetId as any,
-        role,
+      await setUserRole({
+        adminId: user.userId as any,
+        userId: targetUserId as any,
+        role: newRole,
       })
+    } catch (err) {
+      console.error("Failed to update user role", err)
+      alert("Failed to update user role. Please ensure you have admin permissions.")
     } finally {
       setActionLoadingId(null)
     }
   }
 
-  async function removeUser(targetId: string, targetName: string) {
-    if (!adminId) return
-    if (!confirm(`Are you sure you want to remove user "${targetName}"? This action cannot be undone.`)) {
-      return
+  function formatUserDisplay(u: any) {
+    if (u.name) return u.name
+    if (u.displayName) return u.displayName
+    if (u.email) return u.email.split("@")[0]
+    if (u.walletAddress) {
+      const clean = u.walletAddress.replace("email:", "")
+      if (clean.includes("@")) return clean.split("@")[0]
+      return `${clean.slice(0, 6)}...${clean.slice(-4)}`
     }
+    return "Anonymous"
+  }
 
-    setActionLoadingId(targetId)
-    try {
-      await removeMutation({
-        adminId: adminId as any,
-        userId: targetId as any,
-      })
-    } finally {
-      setActionLoadingId(null)
+  function formatIdentifier(u: any) {
+    if (u.email) return u.email
+    if (u.walletAddress) {
+      const clean = u.walletAddress.replace("email:", "")
+      if (clean.length > 20) return `${clean.slice(0, 8)}...${clean.slice(-6)}`
+      return clean
     }
+    return "—"
   }
 
   if (!isAdmin) {
     return (
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-8">
-          <h1 className="font-[family-name:var(--font-syne)] text-2xl font-bold text-foreground">
-            User Management
-          </h1>
+      <div className="flex min-h-[400px] flex-col items-center justify-center text-center p-8">
+        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-red-500/10 text-red-500 mb-4">
+          <Shield className="h-8 w-8" />
         </div>
-        <div className="rounded-2xl border border-border bg-card p-10 text-center">
-          <ShieldAlert className="mx-auto mb-3 h-10 w-10 text-red-400" />
-          <h2 className="text-lg font-bold text-foreground">Access Restricted</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Only administrators can view and manage network users.
-          </p>
-        </div>
+        <h1 className="font-[family-name:var(--font-syne)] text-xl font-bold text-foreground">
+          Administrator Access Required
+        </h1>
+        <p className="mt-2 max-w-md text-sm text-muted-foreground">
+          This section is strictly restricted to CNC DAO System Administrators.
+        </p>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-6xl">
       {/* Header */}
-      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-red-400">
-            <Shield className="h-3.5 w-3.5" />
-            <span>Admin Tool</span>
-          </div>
-          <h1 className="mt-2 font-[family-name:var(--font-syne)] text-2xl font-bold text-foreground">
-            User & Role Management
+          <h1 className="font-[family-name:var(--font-syne)] text-2xl font-bold text-foreground">
+            User Management & Roles
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Review accounts, assign Nature Hero roles, and appoint system administrators.
+            Manage DAO member permissions, promote Nature Heroes, and assign Administrator privileges.
           </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground">
-            Total Members: <span className="font-mono text-[#1db954]">{users.length}</span>
-          </div>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* KPI Cards */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div
+          onClick={() => setRoleFilter("all")}
+          className={`cursor-pointer rounded-2xl border p-4 transition-all ${
+            roleFilter === "all"
+              ? "border-[#1db954] bg-[#1db954]/10"
+              : "border-border bg-card hover:border-[#1db954]/40"
+          }`}
+        >
+          <div className="text-xl font-bold font-[family-name:var(--font-space-mono)] text-foreground">
+            {stats.total}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">Total Members</div>
+        </div>
+
+        <div
+          onClick={() => setRoleFilter("admin")}
+          className={`cursor-pointer rounded-2xl border p-4 transition-all ${
+            roleFilter === "admin"
+              ? "border-red-500 bg-red-500/10"
+              : "border-border bg-card hover:border-red-500/40"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xl font-bold font-[family-name:var(--font-space-mono)] text-red-500">
+              {stats.admins}
+            </span>
+            <Crown className="h-4 w-4 text-red-500" />
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">Administrators</div>
+        </div>
+
+        <div
+          onClick={() => setRoleFilter("nature_hero")}
+          className={`cursor-pointer rounded-2xl border p-4 transition-all ${
+            roleFilter === "nature_hero"
+              ? "border-[#f0a830] bg-[#f0a830]/10"
+              : "border-border bg-card hover:border-[#f0a830]/40"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xl font-bold font-[family-name:var(--font-space-mono)] text-[#f0a830]">
+              {stats.natureHeroes}
+            </span>
+            <ShieldCheck className="h-4 w-4 text-[#f0a830]" />
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">Nature Heroes</div>
+        </div>
+
+        <div
+          onClick={() => setRoleFilter("user")}
+          className={`cursor-pointer rounded-2xl border p-4 transition-all ${
+            roleFilter === "user"
+              ? "border-[#1db954] bg-[#1db954]/10"
+              : "border-border bg-card hover:border-[#1db954]/40"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xl font-bold font-[family-name:var(--font-space-mono)] text-[#1db954]">
+              {stats.regularUsers}
+            </span>
+            <UserCheck className="h-4 w-4 text-[#1db954]" />
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">Community Planters</div>
+        </div>
+      </div>
+
+      {/* Filter & Search Bar */}
+      <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div className="flex flex-wrap items-center gap-1.5">
           {[
-            { id: "all", label: "All Members" },
-            { id: "admin", label: "Admins" },
-            { id: "nature_hero", label: "Nature Heroes" },
-            { id: "nature_hero_pending", label: "Pending" },
-            { id: "user", label: "Planters" },
+            { id: "all", label: `All (${stats.total})` },
+            { id: "admin", label: `Admins (${stats.admins})` },
+            { id: "nature_hero", label: `Heroes (${stats.natureHeroes})` },
+            { id: "user", label: `Planters (${stats.regularUsers})` },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setRoleFilter(tab.id)}
               className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                 roleFilter === tab.id
-                  ? "bg-[#1db954] text-black"
+                  ? "bg-[#1db954] text-black font-bold"
                   : "border border-border bg-card text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -180,9 +238,12 @@ export default function UserManagementPage() {
       </div>
 
       {/* Users Table */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
-        <div className="hidden grid-cols-[1.5fr_1.2fr_1fr_1fr_auto] gap-4 border-b border-border px-5 py-3.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground md:grid">
-          <span>Member Profile</span>
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        {/* Adjusted Polished Table Header */}
+        <div className="hidden grid-cols-[1.5fr_1.3fr_1fr_1fr_auto] items-center gap-4 border-b border-border bg-muted/70 px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground md:grid">
+          <span className="flex items-center gap-1.5">
+            <span>Member Profile</span>
+          </span>
           <span>Wallet / Auth ID</span>
           <span>Current Role</span>
           <span>Joined Date</span>
@@ -198,13 +259,13 @@ export default function UserManagementPage() {
             filteredUsers.map((u: any) => {
               const displayName = formatUserDisplay(u)
               const joined = u.joinedAt ? new Date(u.joinedAt).toLocaleDateString() : "—"
-              const isSelf = u._id === user.userId
+              const isSelf = u._id === user?.userId
               const isLoading = actionLoadingId === u._id
 
               return (
                 <div
                   key={u._id}
-                  className="grid grid-cols-1 gap-3 p-5 transition-colors hover:bg-card-hover md:grid-cols-[1.5fr_1.2fr_1fr_1fr_auto] md:items-center md:gap-4"
+                  className="grid grid-cols-1 gap-3 p-5 transition-colors hover:bg-card-hover md:grid-cols-[1.5fr_1.3fr_1fr_1fr_auto] md:items-center md:gap-4"
                 >
                   {/* User Profile */}
                   <div className="min-w-0 flex items-center gap-3">
@@ -221,107 +282,89 @@ export default function UserManagementPage() {
                           {displayName}
                         </span>
                         {isSelf && (
-                          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-bold text-foreground">
-                            You
+                          <span className="rounded bg-[#1db954]/20 px-1.5 py-0.2 text-[9px] font-bold text-[#1db954]">
+                            YOU
                           </span>
                         )}
                       </div>
                       <div className="truncate text-xs text-muted-foreground">
-                        {u.email || "No email linked"}
+                        {u.email || u.walletAddress || "No email"}
                       </div>
                     </div>
                   </div>
 
                   {/* Wallet / Auth */}
-                  <div className="truncate text-xs font-mono text-muted-foreground">
-                    {u.walletAddress || "—"}
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-medium text-muted-foreground md:hidden">Identifier:</div>
+                    <div className="font-mono text-xs text-foreground truncate">
+                      {formatIdentifier(u)}
+                    </div>
                   </div>
 
                   {/* Role Badge */}
                   <div>
-                    <span
-                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold"
-                      style={{
-                        color: roleLabels[u.role as UserRole]?.color || "#ffffff",
-                        backgroundColor: `${roleLabels[u.role as UserRole]?.color || "#ffffff"}20`,
-                      }}
-                    >
-                      {u.role === "admin" && <Crown className="h-3 w-3" />}
-                      {u.role === "nature_hero" && <CheckCircle className="h-3 w-3" />}
-                      <span>{roleLabels[u.role as UserRole]?.label || u.role}</span>
-                    </span>
+                    <div className="text-[11px] font-medium text-muted-foreground md:hidden mb-1">Role:</div>
+                    {u.role === "admin" ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-500">
+                        <Crown className="h-3 w-3" />
+                        <span>Admin</span>
+                      </span>
+                    ) : u.role === "nature_hero" ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#f0a830]/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#f0a830]">
+                        <ShieldCheck className="h-3 w-3" />
+                        <span>Nature Hero</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        <span>Planter</span>
+                      </span>
+                    )}
                   </div>
 
                   {/* Joined Date */}
-                  <div className="text-xs text-muted-foreground">{joined}</div>
+                  <div>
+                    <div className="text-[11px] font-medium text-muted-foreground md:hidden mb-0.5">Joined:</div>
+                    <span className="text-xs text-muted-foreground">{joined}</span>
+                  </div>
 
                   {/* Action Buttons */}
-                  <div className="flex flex-wrap items-center gap-2 md:justify-end">
-                    {/* Make Admin / Revoke Admin Button */}
-                    {u.role !== "admin" ? (
+                  <div className="flex items-center justify-end gap-1.5">
+                    {/* Make Admin Button */}
+                    {u.role !== "admin" && (
                       <button
                         disabled={isLoading}
-                        onClick={() => setRole(u._id, "admin", displayName)}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-400 transition-all hover:bg-red-500/20 hover:scale-105 disabled:opacity-50"
-                        title="Promote to Administrator"
+                        onClick={() => handleRoleChange(u._id, "admin", displayName)}
+                        className="flex items-center gap-1 rounded-xl bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-500 transition-colors hover:bg-red-500/20 disabled:opacity-50"
+                        title="Promote to Full Administrator"
                       >
-                        <Crown className="h-3.5 w-3.5 text-red-400" />
+                        <Crown className="h-3 w-3" />
                         <span>Make Admin</span>
-                      </button>
-                    ) : !isSelf ? (
-                      <button
-                        disabled={isLoading}
-                        onClick={() => setRole(u._id, "user", displayName)}
-                        className="inline-flex items-center gap-1 rounded-xl border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground disabled:opacity-50"
-                        title="Demote from Admin to regular User"
-                      >
-                        <UserX className="h-3.5 w-3.5" />
-                        <span>Demote to User</span>
-                      </button>
-                    ) : null}
-
-                    {/* Promote to Nature Hero / Revoke Hero */}
-                    {u.role === "nature_hero_pending" && (
-                      <button
-                        disabled={isLoading}
-                        onClick={() => setRole(u._id, "nature_hero", displayName)}
-                        className="inline-flex items-center gap-1 rounded-xl bg-[#1db954] px-3 py-1.5 text-xs font-bold text-black transition-transform hover:scale-105 disabled:opacity-50"
-                      >
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        <span>Approve Hero</span>
                       </button>
                     )}
 
-                    {u.role === "user" && (
+                    {/* Make Hero Button */}
+                    {u.role !== "nature_hero" && u.role !== "admin" && (
                       <button
                         disabled={isLoading}
-                        onClick={() => setRole(u._id, "nature_hero", displayName)}
-                        className="inline-flex items-center gap-1 rounded-xl border border-[#1db954]/30 px-3 py-1.5 text-xs font-medium text-[#1db954] transition-colors hover:bg-[#1db954]/10 disabled:opacity-50"
+                        onClick={() => handleRoleChange(u._id, "nature_hero", displayName)}
+                        className="flex items-center gap-1 rounded-xl bg-[#f0a830]/10 px-3 py-1.5 text-xs font-bold text-[#f0a830] transition-colors hover:bg-[#f0a830]/20 disabled:opacity-50"
+                        title="Promote to Nature Hero Validator"
                       >
-                        <UserCheck className="h-3.5 w-3.5" />
+                        <ShieldCheck className="h-3 w-3" />
                         <span>Make Hero</span>
                       </button>
                     )}
 
-                    {u.role === "nature_hero" && (
+                    {/* Demote to User */}
+                    {u.role && u.role !== "user" && (
                       <button
                         disabled={isLoading}
-                        onClick={() => setRole(u._id, "user", displayName)}
-                        className="inline-flex items-center gap-1 rounded-xl border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+                        onClick={() => handleRoleChange(u._id, "user", displayName)}
+                        className="flex items-center gap-1 rounded-xl border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+                        title="Set role to standard user"
                       >
-                        <span>Revoke Hero</span>
-                      </button>
-                    )}
-
-                    {/* Delete User Button (not for oneself) */}
-                    {!isSelf && (
-                      <button
-                        disabled={isLoading}
-                        onClick={() => removeUser(u._id, displayName)}
-                        className="rounded-xl p-1.5 text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
-                        title="Remove member"
-                      >
-                        <Trash2 className="h-4 w-4" />
+                        <UserX className="h-3 w-3" />
+                        <span>Demote</span>
                       </button>
                     )}
                   </div>
