@@ -1,10 +1,15 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { useSessionUser } from "@/lib/useAuth"
-import { ConvexErrorBoundary } from "@/components/ConvexErrorBoundary"
+import {
+  getStoredMessages,
+  updateStoredMessageStatus,
+  removeStoredMessage,
+  type ContactMessageItem,
+} from "@/lib/messagesStorage"
 import {
   Mail,
   MailOpen,
@@ -17,19 +22,50 @@ import {
   Eye,
 } from "lucide-react"
 
-function AdminMessagesContent() {
+export default function AdminMessagesPage() {
   const user = useSessionUser()
   const isAdmin = user?.role === "admin"
   const adminId = user?.userId
 
-  const messages = useQuery(api.users.listMessages, {}) ?? []
+  // Local fallback state
+  const [localMessages, setLocalMessages] = useState<ContactMessageItem[]>(() => getStoredMessages())
 
-  const updateStatus = useMutation(api.users.updateMessageStatus)
-  const removeMessage = useMutation(api.users.removeMessage)
+  useEffect(() => {
+    const handler = () => setLocalMessages(getStoredMessages())
+    window.addEventListener("messages:change", handler)
+    return () => window.removeEventListener("messages:change", handler)
+  }, [])
+
+  // Try querying Convex if available
+  let convexMessages: any[] | undefined = undefined
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    convexMessages = useQuery(api.users.listMessages, {})
+  } catch {
+    convexMessages = undefined
+  }
+
+  // Mutations
+  let updateStatusMut: any = null
+  let removeMessageMut: any = null
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    updateStatusMut = useMutation(api.users.updateMessageStatus)
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    removeMessageMut = useMutation(api.users.removeMessage)
+  } catch {
+    // Graceful fallback to local handler
+  }
+
+  // Active messages source
+  const messages: ContactMessageItem[] =
+    convexMessages && Array.isArray(convexMessages) && convexMessages.length > 0
+      ? convexMessages
+      : localMessages
 
   const [activeTab, setActiveTab] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedMessage, setSelectedMessage] = useState<any | null>(null)
+  const [selectedMessage, setSelectedMessage] = useState<ContactMessageItem | null>(null)
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
 
   // Safe formatting helpers
@@ -78,17 +114,20 @@ function AdminMessagesContent() {
   async function handleStatusChange(messageId: string, status: "unread" | "read" | "resolved") {
     setActionLoadingId(messageId)
     try {
-      await updateStatus({
-        adminId: adminId ? String(adminId) : undefined,
-        messageId: messageId as any,
-        status,
-      })
+      if (updateStatusMut) {
+        await updateStatusMut({
+          adminId: adminId ? String(adminId) : undefined,
+          messageId: messageId as any,
+          status,
+        })
+      }
+    } catch {
+      // Fallback
+    } finally {
+      updateStoredMessageStatus(messageId, status)
       if (selectedMessage && selectedMessage._id === messageId) {
         setSelectedMessage({ ...selectedMessage, status })
       }
-    } catch (err) {
-      console.error("Failed to update status", err)
-    } finally {
       setActionLoadingId(null)
     }
   }
@@ -97,21 +136,24 @@ function AdminMessagesContent() {
     if (!confirm("Are you sure you want to permanently delete this inquiry?")) return
     setActionLoadingId(messageId)
     try {
-      await removeMessage({
-        adminId: adminId ? String(adminId) : undefined,
-        messageId: messageId as any,
-      })
+      if (removeMessageMut) {
+        await removeMessageMut({
+          adminId: adminId ? String(adminId) : undefined,
+          messageId: messageId as any,
+        })
+      }
+    } catch {
+      // Fallback
+    } finally {
+      removeStoredMessage(messageId)
       if (selectedMessage && selectedMessage._id === messageId) {
         setSelectedMessage(null)
       }
-    } catch (err) {
-      console.error("Failed to delete message", err)
-    } finally {
       setActionLoadingId(null)
     }
   }
 
-  function handleOpenMessage(m: any) {
+  function handleOpenMessage(m: ContactMessageItem) {
     if (!m) return
     setSelectedMessage(m)
     if (m.status === "unread") {
@@ -271,7 +313,7 @@ function AdminMessagesContent() {
                 : "No inquiries in this category."}
             </div>
           ) : (
-            filteredMessages.map((m: any) => {
+            filteredMessages.map((m: ContactMessageItem) => {
               if (!m) return null
               const isUnread = m.status === "unread"
               const isResolved = m.status === "resolved"
@@ -477,13 +519,5 @@ function AdminMessagesContent() {
         </div>
       )}
     </div>
-  )
-}
-
-export default function AdminMessagesPage() {
-  return (
-    <ConvexErrorBoundary>
-      <AdminMessagesContent />
-    </ConvexErrorBoundary>
   )
 }

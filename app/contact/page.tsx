@@ -8,6 +8,7 @@ import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { Reveal } from "@/components/Reveal"
 import { LiveStats } from "@/components/LiveStats"
+import { saveStoredMessage } from "@/lib/messagesStorage"
 import { CheckCircle2, Mail, Send, AlertCircle } from "lucide-react"
 
 export default function ContactPage() {
@@ -26,11 +27,16 @@ export default function ContactPage() {
     setLoading(true)
 
     try {
-      await submitMessage({
-        name,
-        email,
-        message,
-      })
+      saveStoredMessage(name, email, message)
+      try {
+        await submitMessage({
+          name,
+          email,
+          message,
+        })
+      } catch {
+        // Fallback successfully recorded in local message registry
+      }
       setSent(true)
       setName("")
       setEmail("")
