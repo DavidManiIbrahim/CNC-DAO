@@ -263,6 +263,28 @@ export default function TreeRegPage() {
                           ))}
                         </datalist>
                       </div>
+                      <Field label="Planting date" type="date" required />
+                      <div className="grid grid-cols-2 gap-4">
+                        <Field
+                          label="Approx. height (m)"
+                          type="number"
+                          placeholder="1.5"
+                          value={formData.height}
+                          onChange={(v) => handleChange("height", v)}
+                        />
+                        <Field
+                          label="Approx. age"
+                          placeholder="e.g. 6 months"
+                          value={formData.age}
+                          onChange={(v) => handleChange("age", v)}
+                        />
+                      </div>
+                      <TextArea
+                        label="Additional notes"
+                        placeholder="Anything else Nature Heroes should know — soil type, nearby landmarks, etc."
+                        value={formData.notes}
+                        onChange={(v) => handleChange("notes", v)}
+                      />
                     </div>
                   )}
 
@@ -309,7 +331,13 @@ export default function TreeRegPage() {
                         <Field label="City/Town" placeholder="Lagos" required value={city} onChange={setCity} />
                         <Field label="Country" placeholder="Nigeria" required value={country} onChange={setCountry} />
                       </div>
-                      <Select label="Land ownership" options={landOwnership} required />
+                      <Select
+                        label="Land ownership"
+                        options={landOwnership}
+                        value={formData.landOwnership}
+                        onChange={(v) => handleChange("landOwnership", v)}
+                        required
+                      />
                     </div>
                   )}
 
@@ -379,17 +407,18 @@ export default function TreeRegPage() {
                         title="Planter Info"
                         subtitle="Who gets credit for this tree?"
                       />
-                      <Field label="Full name" required defaultValue={user?.displayName || ""} />
+                      <Field
+                        label="Full name"
+                        value={formData.planterName}
+                        onChange={(v) => handleChange("planterName", v)}
+                        required
+                      />
                       <Field
                         label="Email"
                         type="email"
+                        value={formData.planterEmail}
+                        onChange={(v) => handleChange("planterEmail", v)}
                         required
-                        defaultValue={
-                          googleSession?.user?.email ||
-                          (user?.walletAddress?.startsWith("email:")
-                            ? user.walletAddress.replace("email:", "")
-                            : "")
-                        }
                       />
                       <div>
                         <label className="mb-2 block text-sm font-semibold text-foreground">
@@ -492,14 +521,41 @@ function Field({
   )
 }
 
+function TextArea({
+  label,
+  placeholder,
+  value,
+  onChange,
+}: {
+  label: string
+  placeholder?: string
+  value?: string
+  onChange?: (value: string) => void
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-semibold text-foreground">{label}</label>
+      <textarea
+        placeholder={placeholder}
+        rows={3}
+        className="w-full rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-[#1db954]/60"
+      />
+    </div>
+  )
+}
+
 function Select({
   label,
   options,
   required = false,
+  value,
+  onChange,
 }: {
   label: string
   options: string[]
   required?: boolean
+  value?: string
+  onChange?: (value: string) => void
 }) {
   return (
     <div>
